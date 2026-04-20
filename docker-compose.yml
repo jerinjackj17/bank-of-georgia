@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   mongo:
     image: mongo:7
@@ -50,8 +48,7 @@ services:
       - kafka
       - redis
     environment:
-      SPRING_DATA_MONGODB_HOST: mongo
-      SPRING_DATA_MONGODB_PORT: 27018
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/bank_of_georgia
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
@@ -68,7 +65,7 @@ services:
       - kafka
     environment:
       SPRING_DATA_MONGODB_HOST: mongo
-      SPRING_DATA_MONGODB_PORT: 27018
+      SPRING_DATA_MONGODB_PORT: 27017
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
   notification-service:
