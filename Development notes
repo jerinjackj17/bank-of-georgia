@@ -3,7 +3,7 @@ For API Effort Estimation sheet in Google sheets, before 4/21 we need to:
     - Add UI implementation to task schedule
 
 For Project we need to before 4/21:
-    -Figure out MongoDB connection bug
+    -Figure out MongoDB connection bug ✅
     - Show min. 1 testable route with Postman persisting a customer
 
 This week (week of 4/20), we need to:
