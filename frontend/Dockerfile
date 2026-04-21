@@ -1,13 +1,23 @@
+# Stage 1 - Build
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
+# Stage 2 - Serve
 FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+RUN npm install -g serve
 
-RUN npm install
+COPY --from=build /app/dist ./dist
 
-COPY . .
+EXPOSE 3000
 
-EXPOSE 5173
-
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["serve", "-s", "dist", "-l", "3000"]
