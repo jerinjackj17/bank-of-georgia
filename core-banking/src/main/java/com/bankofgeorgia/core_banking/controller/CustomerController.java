@@ -16,7 +16,7 @@ import com.bankofgeorgia.core_banking.service.CustomerService;
 
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000") // Adjust the origin as needed
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/customers")
 public class CustomerController {
 
@@ -29,9 +29,9 @@ public class CustomerController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<CustomerRequestDTO> registerCustomer(@RequestBody CustomerRequestDTO customer) {
-        logger.info("Registering new customer with email: " + customer.getEmail());
-        CustomerResponseDTO registeredCustomer = customerService.registerCustomer(customer);
+    public ResponseEntity<CustomerResponseDTO> registerCustomer(@RequestBody CustomerRequestDTO customerRequest) {
+        logger.info("Registering new customer with email: " + customerRequest.getEmail());
+        CustomerResponseDTO registeredCustomer = customerService.registerCustomer(customerRequest);
         return ResponseEntity.ok(registeredCustomer);
     }
 }
