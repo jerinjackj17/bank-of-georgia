@@ -1,4 +1,4 @@
-package com.bankofgeorgia.core_banking.controller;
+package com.bankofgeorgia.corebanking.controller;
 
 import java.util.logging.Logger;
 
@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.http.ResponseEntity;
 
-import com.bankofgeorgia.core_banking.dto.OtpRequestDTO;
-import com.bankofgeorgia.core_banking.dto.OtpResponseDTO;
+import com.bankofgeorgia.corebanking.dto.OtpRequestDTO;
+import com.bankofgeorgia.corebanking.dto.OtpResponseDTO;
 
-import com.bankofgeorgia.core_banking.service.AuthService;
+import com.bankofgeorgia.corebanking.service.AuthService;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")

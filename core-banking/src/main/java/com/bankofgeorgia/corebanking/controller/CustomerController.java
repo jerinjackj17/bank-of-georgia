@@ -1,4 +1,4 @@
-package com.bankofgeorgia.core_banking.controller;
+package com.bankofgeorgia.corebanking.controller;
 
 import java.util.logging.Logger;
 
@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.http.ResponseEntity;
 
-import com.bankofgeorgia.core_banking.dto.CustomerRequestDTO;
-import com.bankofgeorgia.core_banking.dto.CustomerResponseDTO;
+import com.bankofgeorgia.corebanking.dto.CustomerRequestDTO;
+import com.bankofgeorgia.corebanking.dto.CustomerResponseDTO;
 
-import com.bankofgeorgia.core_banking.service.CustomerService;
+import com.bankofgeorgia.corebanking.service.CustomerService;
 
 
 @RestController

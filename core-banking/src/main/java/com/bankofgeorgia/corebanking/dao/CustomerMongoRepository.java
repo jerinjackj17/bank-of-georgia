@@ -1,10 +1,10 @@
-package com.bankofgeorgia.core_banking.dao;
+package com.bankofgeorgia.corebanking.dao;
 
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
-import com.bankofgeorgia.core_banking.entity.Customer;
+import com.bankofgeorgia.corebanking.entity.Customer;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;

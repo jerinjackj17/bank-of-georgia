@@ -1,9 +1,9 @@
-package com.bankofgeorgia.core_banking.service;
+package com.bankofgeorgia.corebanking.service;
 
-import com.bankofgeorgia.core_banking.dto.CustomerRequestDTO;
-import com.bankofgeorgia.core_banking.dto.CustomerResponseDTO;
-import com.bankofgeorgia.core_banking.entity.Customer;
-import com.bankofgeorgia.core_banking.dao.CustomerDao;
+import com.bankofgeorgia.corebanking.dto.CustomerRequestDTO;
+import com.bankofgeorgia.corebanking.dto.CustomerResponseDTO;
+import com.bankofgeorgia.corebanking.entity.Customer;
+import com.bankofgeorgia.corebanking.dao.CustomerDao;
 
 import java.util.logging.Logger;
 

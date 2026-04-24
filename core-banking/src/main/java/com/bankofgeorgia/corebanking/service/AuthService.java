@@ -1,10 +1,10 @@
-package com.bankofgeorgia.core_banking.service;
+package com.bankofgeorgia.corebanking.service;
 
 import java.util.logging.Logger;
 
-import com.bankofgeorgia.core_banking.dto.OtpRequestDTO;
-import com.bankofgeorgia.core_banking.dto.OtpResponseDTO;
-import com.bankofgeorgia.core_banking.dto.SmsOtpRequest;
+import com.bankofgeorgia.corebanking.dto.OtpRequestDTO;
+import com.bankofgeorgia.corebanking.dto.OtpResponseDTO;
+import com.bankofgeorgia.corebanking.dto.SmsOtpRequest;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;

@@ -1,4 +1,4 @@
-package com.bankofgeorgia.core_banking.config;
+package com.bankofgeorgia.corebanking.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

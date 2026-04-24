@@ -1,4 +1,4 @@
-package com.bankofgeorgia.core_banking.dto;
+package com.bankofgeorgia.corebanking.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
