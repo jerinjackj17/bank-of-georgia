@@ -1,19 +1,19 @@
 package com.bankofgeorgia.corebanking.auth.dto;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
 @NoArgsConstructor
-public class SmsOtpRequest {
+public class OtpVerificationRequestDTO {
     private String phoneNumber;
-    private String otpCode;
+    private String otp;
 
-    public SmsOtpRequest(String phoneNumber, String otpCode) {
+    public OtpVerificationRequestDTO(String phoneNumber, String otp) {
         this.phoneNumber = phoneNumber;
-        this.otpCode = otpCode;
+        this.otp = otp;
     }
-
+    
 }

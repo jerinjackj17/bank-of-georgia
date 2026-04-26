@@ -7,11 +7,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class SmsNotificationRequest {
+public class OtpNotificationRequestDTO {
     private String phoneNumber;
     private String otpCode;
 
-    public SmsNotificationRequest(String phoneNumber, String otpCode) {
+    public OtpNotificationRequestDTO(String phoneNumber, String otpCode) {
         this.phoneNumber = phoneNumber;
         this.otpCode = otpCode;
     }
