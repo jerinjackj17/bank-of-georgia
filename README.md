@@ -14,9 +14,10 @@ Microservices-based digital banking system built with Spring Boot and React.
 ## Tech Stack
 
 - **Backend:** Java 21, Spring Boot 4.0.5 (Web MVC, Security, Data MongoDB, Data Redis)
-- **Frontend:** React, Vite, Tailwind CSS
+- **Frontend:** React 19, Vite, Tailwind CSS, react-router-dom, axios
 - **Database:** MongoDB
 - **Cache:** Redis (OTP storage)
+- **Messaging:** Kafka + Zookeeper
 - **SMS:** Twilio
 - **Containerization:** Docker
 
@@ -89,14 +90,12 @@ Microservices-based digital banking system built with Spring Boot and React.
 
 ## Running with Docker
 
-> All services are configured to run as Docker containers.
-
 ### Prerequisites
 
 - Docker and Docker Compose installed
 - Twilio credentials (account SID, auth token, phone number)
 
-### Environment Variables
+### Environment variables
 
 Create a `.env` file in the project root:
 
@@ -114,7 +113,9 @@ docker compose up --build
 
 ## Running Locally (without Docker)
 
-Update `core-banking/src/main/resources/application.properties` to use the local config block (commented out by default):
+### Backend
+
+Update `core-banking/src/main/resources/application.properties` to use local config:
 
 ```properties
 spring.mongodb.uri=mongodb://localhost:27018/bank_of_georgia
@@ -123,18 +124,27 @@ spring.data.redis.port=6379
 notification.service.otp.url=http://localhost:8082/api/notifications/otp
 ```
 
-Then start each service individually:
+Start each service:
 
 ```bash
-# core-banking
 cd core-banking && ./mvnw spring-boot:run
-
-# notification-service
 cd notification-service && ./mvnw spring-boot:run
-
-# frontend
-cd frontend && npm install && npm run dev
 ```
+
+### Frontend
+
+Copy the environment template and install dependencies:
+
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+The frontend will be available at `http://localhost:3000`.
+
+> To point the frontend at a different backend, update `VITE_API_URL` in `frontend/.env` and rebuild.
 
 ## Branch Strategy
 

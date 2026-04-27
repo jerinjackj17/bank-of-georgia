@@ -1,7 +1,3 @@
-For API Effort Estimation sheet in Google sheets, before 4/21 we need to:
-    - Add 2 weeks for QA (Quality Assurance) ✅
-    - 5/29 Last day of internship ✅
-
 For Project we need to before 4/28 (Next meeting) (Jack presents, Max will be in meeting but unable to participate):
     -Presention of  Sprint work:  
         -Banking Project - Sprint 1 - Demo ( work done from Apr 20 - Apr 27)
@@ -14,44 +10,45 @@ For Project we need to before 4/28 (Next meeting) (Jack presents, Max will be in
             -Discuss about  sprint 2 plan
             -Any pending or carry over from Sprint 1.
 
+For Project we need to:
+    - Implement feature branching (Main -> Development -> Feature) ✅
+    - Maintain ReadME file ✅
+    - Remember to have all emails/texts sent from notification service (inlcuding OTP's with Twilio) ✅
+    - Write Unit tests for each service
+    - Maintain quality java notes
+    - Implement Spring API gateway server
+    - Make sure to include delete routes in services
+    - Kubernetes???
+
+For API Effort Estimation sheet in Google sheets, before 4/21 we need to:
+    - Add 2 weeks for QA (Quality Assurance) ✅
+    - 5/29 Last day of internship ✅
 
 Next week? (week of 4/27??), we need to:
     -Take exam #2
 
-
-For Project we need to:
-    - Implement feature branching (Main -> Development -> Feature) ✅
-    - Write Unit tests for each service
-    - Maintain quality java notes
-    - Maintain ReadME file ✅
-    - Implement Spring API gateway server
-    - Make sure to include delete routes in services
-    - Remember to have all emails/texts sent from notification service (inlcuding OTP's with Twilio)
-
-    -Kubernetes???
-
-Max's Notes/Progress Updates:
+Max's Notes/personal progress Updates:
     -Succesfully able to test registerCustomer and persist ✅
     -Succesfully able to test requestOTP✅
     -Succesfully able to test VerifyOtp✅
     -Succesfully able to test login ✅
     -Redis Implemented ✅
-    - All authpoints Implemented and written ✅
+    -All authpoints Implemented and written ✅
     -OTP received with virtual phone from notification service✅ 
-
-    -Created additonal Google Doc ✅
+    -ALL AuthUI written ✅
+    -Created additonal Google Doc for dev ✅
     
-        -- Max working in Auth Feature Branch ✅
-        -- Will begin Customer UI and "finish" Monday evening
-        -- Max will add Redis implementation ✅
-        -- Max needs to refactor auth service to call notification service  from an HTTP Client ✅
-    
-        -- Create Notes
-        -- Edit ReadMe ✅
-        -- Add validation
+    -- Max working in Auth Feature Branch ✅
+    -- Will begin Customer UI and "finish" Monday evening✅
+    -- Max will add Redis implementation ✅
+    -- Max needs to refactor auth service to call notification service  from an HTTP Client ✅
+    -- Refactor file structure for each service to have it's own file, and rename "dao" to "repository" ✅
+    -- Refactor Service layers to have a service interafce and srvice impl ✅
+    -- Edit ReadMe ✅
+    -- Add/Edit validation
+    -- Create Notes
 
-        -- Refactor file structure for each service to have it's own file, and rename "dao" to "repository" ✅
-        -- Refactor Service layers to have a service interafce and srvice impl ✅
+        
 
     
     

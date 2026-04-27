@@ -1,16 +1,52 @@
-# React + Vite
+# Frontend — Bank of Georgia
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19 web client for the Bank of Georgia banking system.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19, Vite 8
+- Tailwind CSS 4
+- react-router-dom 7
+- axios 1.9
 
-## React Compiler
+## Project Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```
+frontend/
+├── .env                  # Local environment variables (gitignored)
+├── .env.example          # Template — copy this to .env
+├── services/
+│   ├── api.js            # Axios instance (reads VITE_API_URL)
+│   └── authApi.js        # Auth API functions
+├── routes/
+│   └── AppRoutes.jsx     # Route definitions
+└── src/
+    ├── main.jsx          # App entry point
+    ├── App.jsx           # Root component
+    └── pages/
+        ├── LoginPage.jsx # Password and phone OTP login
+        └── OtpPage.jsx   # OTP entry and verification
+```
 
-## Expanding the ESLint configuration
+## Setup
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+cp .env.example .env
+npm install
+npm run dev
+```
+
+## Environment Variables
+
+| Variable | Description | Default |
+|---|---|---|
+| `VITE_API_URL` | Backend API base URL | `http://localhost:8080/api` |
+
+> Vite bakes env vars into the bundle at build time. If you change `.env`, run `npm run build` again.
+
+## Pages
+
+| Route | Page | Description |
+|---|---|---|
+| `/` | LoginPage | Sign in with username/email + password, or request a phone OTP |
+| `/login/otp` | OtpPage | Enter the 6-digit OTP sent via SMS |
