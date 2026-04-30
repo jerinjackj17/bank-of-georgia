@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,60 +27,101 @@ public class CustomerController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<CustomerResponseDTO> registerCustomer(@RequestBody CustomerRequestDTO request) {
-
-        // log incoming request
+    public ResponseEntity<?> registerCustomer(@RequestBody CustomerRequestDTO request) {
+        // Logs the incoming customer registration request.
         logger.info("Received registration request for email: {}", request.getEmail());
 
-        CustomerResponseDTO response = customerService.registerCustomer(request);
+        try {
+            CustomerResponseDTO response = customerService.registerCustomer(request);
 
-        logger.info("Customer registration successful for email: {}", request.getEmail());
+            logger.info("Customer registration successful for email: {}", request.getEmail());
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException ex) {
+            logger.error("Customer registration failed for email: {}", request.getEmail(), ex);
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ex.getMessage());
+        }
     }
 
     @GetMapping
-    public ResponseEntity<List<CustomerResponseDTO>> getAllCustomers() {
-
+    public ResponseEntity<?> getAllCustomers() {
+        // Logs the request to fetch all customers.
         logger.info("Received request to fetch all customers");
 
-        return ResponseEntity.ok(customerService.getAllCustomers());
+        try {
+            List<CustomerResponseDTO> response = customerService.getAllCustomers();
+
+            logger.info("Fetched {} customers", response.size());
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException ex) {
+            logger.error("Failed to fetch all customers", ex);
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ex.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CustomerResponseDTO> getCustomerById(@PathVariable String id) {
-
+    public ResponseEntity<?> getCustomerById(@PathVariable String id) {
+        // Logs the customer lookup request.
         logger.info("Received request to fetch customer with id: {}", id);
 
-        return ResponseEntity.ok(customerService.getCustomerById(id));
+        try {
+            CustomerResponseDTO response = customerService.getCustomerById(id);
+
+            logger.info("Customer fetched successfully for id: {}", id);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException ex) {
+            logger.error("Failed to fetch customer with id: {}", id, ex);
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ex.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CustomerResponseDTO> updateCustomer(
+    public ResponseEntity<?> updateCustomer(
             @PathVariable String id,
             @RequestBody UpdateCustomerRequestDTO request) {
-
-        // log update request
+        // Logs the customer update request.
         logger.info("Received update request for customer id: {}", id);
 
-        CustomerResponseDTO response = customerService.updateCustomer(id, request);
+        try {
+            CustomerResponseDTO response = customerService.updateCustomer(id, request);
 
-        logger.info("Customer updated successfully for id: {}", id);
+            logger.info("Customer updated successfully for id: {}", id);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException ex) {
+            logger.error("Customer update failed for id: {}", id, ex);
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ex.getMessage());
+        }
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<CustomerResponseDTO> updateCustomerStatus(
+    public ResponseEntity<?> updateCustomerStatus(
             @PathVariable String id,
             @RequestBody CustomerStatusUpdateRequestDTO request) {
-
+        // Logs the customer status update request.
         logger.info("Received status update request for customer id: {}", id);
 
-        CustomerResponseDTO response = customerService.updateCustomerStatus(id, request);
+        try {
+            CustomerResponseDTO response = customerService.updateCustomerStatus(id, request);
 
-        logger.info("Customer status updated successfully for id: {}", id);
+            logger.info("Customer status updated successfully for id: {}", id);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException ex) {
+            logger.error("Customer status update failed for id: {}", id, ex);
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ex.getMessage());
+        }
     }
 }
