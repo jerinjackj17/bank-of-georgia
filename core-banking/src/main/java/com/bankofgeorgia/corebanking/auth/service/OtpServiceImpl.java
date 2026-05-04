@@ -33,12 +33,16 @@ public class OtpServiceImpl implements OtpService {
     public OtpResponseDTO requestOtp(OtpRequestDTO otpRequest) {
         logger.info("Processing OTP request for phone number: " + otpRequest.getPhoneNumber());
        
-        String otpCode = String.valueOf((int)(Math.random() * 900000) + 100000); 
+        // Generate a random 6-digit OTP code.
+        String otpCode = String.valueOf((int)(Math.random() * 900000) + 100000);
 
+        // Build the payload to send to the notification service.
         SmsOtpRequest smsOtpRequest = new SmsOtpRequest(otpRequest.getPhoneNumber(), otpCode);
 
+        // Trigger SMS delivery via the notification service.
         notificationClientService.sendOtp(smsOtpRequest);
 
+        // Store the OTP in Redis keyed by phone number with a 5-minute expiry.
         redisTemplate.opsForValue().set(otpRequest.getPhoneNumber(), otpCode, 5, TimeUnit.MINUTES);
 
         return new OtpResponseDTO("OTP requested successfully", otpRequest.getPhoneNumber(), "true", "300");
@@ -48,7 +52,10 @@ public class OtpServiceImpl implements OtpService {
     public LoginResponseDTO verifyOtp(OtpVerificationRequestDTO otpVerificationRequest) {
         logger.info("Verifying OTP for phone number: " + otpVerificationRequest.getPhoneNumber());
 
+        // Fetch the stored OTP from Redis using the phone number as the key.
         String storedOtp = (String) redisTemplate.opsForValue().get(otpVerificationRequest.getPhoneNumber());
+
+        // If the submitted OTP matches, delete it from Redis and return success.
         if (storedOtp != null && storedOtp.equals(otpVerificationRequest.getOtp())) {
             redisTemplate.delete(otpVerificationRequest.getPhoneNumber());
             return new LoginResponseDTO("OTP verified successfully", otpVerificationRequest.getPhoneNumber(), "true");

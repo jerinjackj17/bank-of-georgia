@@ -1,8 +1,9 @@
 package com.bankofgeorgia.notification_service.dto;
 
+// Returned by notification-service after attempting to send an OTP SMS.
 public class NotificationResponseDTO {
-    private String status;
-    private String message;
+    private String status;  // "success" or an error indicator
+    private String message; // human-readable description of the result
 
     public NotificationResponseDTO() {
     }
@@ -27,5 +28,5 @@ public class NotificationResponseDTO {
     public void setMessage(String message) {
         this.message = message;
     }
-    
+
 }

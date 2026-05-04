@@ -29,6 +29,7 @@ public class AuthServiceImpl implements AuthService {
 
         Customer customer = null;
 
+        // Look up the customer by username or email depending on login type.
         if ("username".equalsIgnoreCase(loginRequest.getLoginType())) {
             customer = customerRepository.findByUsername(loginRequest.getLoginId())
                     .orElseThrow(() -> new RuntimeException("User not found with username: " + loginRequest.getLoginId()));
@@ -39,10 +40,12 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Unsupported login type: " + loginRequest.getLoginType());
         }
 
+        // Compare the entered password against the stored BCrypt hash.
         if (!passwordEncoder.matches(loginRequest.getPassword(), customer.getPasswordHash())) {
             throw new RuntimeException("Invalid password for user: " + loginRequest.getLoginId());
         }
 
+        // Return a plain success response — no JWT token is issued yet.
         return new LoginResponseDTO("Login successful", loginRequest.getLoginId(), "true");
     }
 
