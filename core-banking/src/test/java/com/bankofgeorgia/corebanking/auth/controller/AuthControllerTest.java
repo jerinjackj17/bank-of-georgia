@@ -1,11 +1,13 @@
 package com.bankofgeorgia.corebanking.auth.controller;
 
+import com.bankofgeorgia.corebanking.auth.dto.EmployeeLoginRequestDTO;
 import com.bankofgeorgia.corebanking.auth.dto.LoginRequestDTO;
 import com.bankofgeorgia.corebanking.auth.dto.LoginResponseDTO;
 import com.bankofgeorgia.corebanking.auth.dto.OtpRequestDTO;
 import com.bankofgeorgia.corebanking.auth.dto.OtpResponseDTO;
 import com.bankofgeorgia.corebanking.auth.dto.OtpVerificationRequestDTO;
 import com.bankofgeorgia.corebanking.auth.service.AuthService;
+import com.bankofgeorgia.corebanking.auth.service.EmployeeAuthService;
 import com.bankofgeorgia.corebanking.auth.service.OtpService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +33,8 @@ class AuthControllerTest {
 
     private OtpService otpService;
 
+    private EmployeeAuthService employeeAuthService;
+
     private ObjectMapper objectMapper;
 
     @BeforeEach
@@ -38,9 +42,10 @@ class AuthControllerTest {
         // Creates fresh mocked services before each test.
         authService = mock(AuthService.class);
         otpService = mock(OtpService.class);
+        employeeAuthService = mock(EmployeeAuthService.class);
 
         // Creates the controller with the mocked services.
-        AuthController authController = new AuthController(authService, otpService);
+        AuthController authController = new AuthController(authService, otpService, employeeAuthService);
 
         // Builds MockMvc without starting the full Spring Boot application.
         mockMvc = standaloneSetup(authController).build();
@@ -180,5 +185,49 @@ class AuthControllerTest {
 
         // Verifies that the OTP service was called.
         verify(otpService).verifyOtp(any(OtpVerificationRequestDTO.class));
+    }
+
+    @Test
+    void employeeLogin_ShouldReturnLoginResponse_WhenCredentialsAreValid() throws Exception {
+        // Builds a valid employee login request with username and password.
+        EmployeeLoginRequestDTO request = new EmployeeLoginRequestDTO("emp1", "password123");
+
+        // Builds the response the mocked service should return.
+        LoginResponseDTO response = new LoginResponseDTO("Login successful", "emp1", "true");
+
+        // Tells Mockito what to return when loginByUsername is called.
+        when(employeeAuthService.loginByUsername(any(EmployeeLoginRequestDTO.class))).thenReturn(response);
+
+        // Sends POST request and checks status plus returned JSON fields.
+        mockMvc.perform(post("/api/auth/employee/login/username")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Login successful"))
+                .andExpect(jsonPath("$.loginId").value("emp1"))
+                .andExpect(jsonPath("$.verified").value("true"));
+
+        // Verifies that the controller called the employee auth service once.
+        verify(employeeAuthService).loginByUsername(any(EmployeeLoginRequestDTO.class));
+    }
+
+    @Test
+    void employeeLogin_ShouldReturnServerError_WhenServiceFails() throws Exception {
+        // Builds a valid request, but the service will fail.
+        EmployeeLoginRequestDTO request = new EmployeeLoginRequestDTO("emp1", "wrongpassword");
+
+        // Forces the mocked service to throw an exception.
+        when(employeeAuthService.loginByUsername(any(EmployeeLoginRequestDTO.class)))
+                .thenThrow(new RuntimeException("Invalid password for employee: emp1"));
+
+        // Sends POST request and expects the controller to return HTTP 500.
+        mockMvc.perform(post("/api/auth/employee/login/username")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Invalid password for employee: emp1"));
+
+        // Verifies that the employee auth service was called.
+        verify(employeeAuthService).loginByUsername(any(EmployeeLoginRequestDTO.class));
     }
 }
