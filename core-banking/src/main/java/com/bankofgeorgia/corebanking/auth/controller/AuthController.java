@@ -10,12 +10,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import com.bankofgeorgia.corebanking.auth.dto.EmployeeLoginRequestDTO;
 import com.bankofgeorgia.corebanking.auth.dto.OtpRequestDTO;
 import com.bankofgeorgia.corebanking.auth.dto.OtpResponseDTO;
 import com.bankofgeorgia.corebanking.auth.dto.LoginRequestDTO;
 import com.bankofgeorgia.corebanking.auth.dto.LoginResponseDTO;
 import com.bankofgeorgia.corebanking.auth.dto.OtpVerificationRequestDTO;
 import com.bankofgeorgia.corebanking.auth.service.AuthService;
+import com.bankofgeorgia.corebanking.auth.service.EmployeeAuthService;
 import com.bankofgeorgia.corebanking.auth.service.OtpService;
 
 @RestController
@@ -27,10 +29,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final OtpService otpService;
+    private final EmployeeAuthService employeeAuthService;
 
-    public AuthController(AuthService authService, OtpService otpService) {
+    public AuthController(AuthService authService, OtpService otpService, EmployeeAuthService employeeAuthService) {
         this.authService = authService;
         this.otpService = otpService;
+        this.employeeAuthService = employeeAuthService;
     }
 
     // Handles username or email password login.
@@ -89,6 +93,23 @@ public class AuthController {
                     .body(ex.getMessage());
         }
     }
-    
-    
+
+    // Handles username-based login for employees.
+    @PostMapping("/employee/login/username")
+    public ResponseEntity<?> employeeLogin(@RequestBody EmployeeLoginRequestDTO loginRequest) {
+        logger.info("Attempting employee login for username: " + loginRequest.getUsername());
+
+        try {
+            LoginResponseDTO loginResponse = employeeAuthService.loginByUsername(loginRequest);
+
+            logger.info("Employee login successful for: " + loginRequest.getUsername());
+            return ResponseEntity.ok(loginResponse);
+        } catch (RuntimeException ex) {
+            logger.severe("Employee login failed for: " + loginRequest.getUsername() + " - " + ex.getMessage());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ex.getMessage());
+        }
+    }
 }

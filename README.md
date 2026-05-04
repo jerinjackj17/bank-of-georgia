@@ -6,7 +6,7 @@ Microservices-based digital banking system built with Spring Boot and React.
 
 | Service | Port | Description |
 |---|---|---|
-| `core-banking` | 8080 | Main service — customer management and authentication |
+| `core-banking` | 8080 | Main service — customer, employee, and auth management |
 | `notification-service` | 8082 | SMS delivery via Twilio |
 | `event-service` | 8081 | Event service (in progress) |
 | `frontend` | 3000 | React/Vite web client |
@@ -24,6 +24,8 @@ Microservices-based digital banking system built with Spring Boot and React.
 ## API Reference
 
 ### Auth — `/api/auth`
+
+#### Customer Auth
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -55,6 +57,20 @@ Microservices-based digital banking system built with Spring Boot and React.
 }
 ```
 
+#### Employee Auth
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/employee/login/username` | Login with username + password |
+
+**Employee login request:**
+```json
+{
+  "username": "emp1",
+  "password": "secret"
+}
+```
+
 ---
 
 ### Customers — `/api/customers`
@@ -77,6 +93,60 @@ Microservices-based digital banking system built with Spring Boot and React.
   "phone": "+15551234567",
   "password": "secret",
   "dateOfBirth": "1990-01-01"
+}
+```
+
+---
+
+### Employees — `/api/employees`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/employees` | Create a new employee |
+| GET | `/api/employees` | List all employees |
+| GET | `/api/employees/{id}` | Get employee by ID |
+| PUT | `/api/employees/{id}` | Update employee profile |
+| PUT | `/api/employees/{id}/role` | Update employee role |
+| PUT | `/api/employees/{id}/status` | Update employee status (`ACTIVE` / `INACTIVE`) |
+
+**Create request:**
+```json
+{
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "email": "jane@example.com",
+  "username": "jane_smith",
+  "phone": "+15559876543",
+  "password": "secret",
+  "dateOfBirth": "1988-06-15",
+  "employeeId": "EMP001",
+  "role": "TELLER",
+  "department": "RETAIL"
+}
+```
+
+**Update profile request** (`PUT /api/employees/{id}`) — all fields optional:
+```json
+{
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "phone": "+15559876543",
+  "dateOfBirth": "1988-06-15",
+  "department": "OPERATIONS"
+}
+```
+
+**Update role request** (`PUT /api/employees/{id}/role`):
+```json
+{
+  "role": "MANAGER"
+}
+```
+
+**Update status request** (`PUT /api/employees/{id}/status`):
+```json
+{
+  "status": "INACTIVE"
 }
 ```
 
