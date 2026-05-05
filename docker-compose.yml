@@ -83,13 +83,23 @@ services:
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
       TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
 
-  frontend:
+  frontend-customer:
     build:
-      context: ./frontend
+      context: ./frontend-customer
       dockerfile: Dockerfile
-    container_name: bank-frontend
+    container_name: bank-frontend-customer
     ports:
       - "3000:3000"
+    depends_on:
+      - core-banking
+
+  frontend-employee:
+    build:
+      context: ./frontend-employee
+      dockerfile: Dockerfile
+    container_name: bank-frontend-employee
+    ports:
+      - "3001:3000"
     depends_on:
       - core-banking
 

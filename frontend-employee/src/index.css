@@ -1,0 +1,123 @@
+/* Imports Tailwind CSS utilities. */
+@import "tailwindcss";
+
+/* Defines reusable project theme colors. */
+:root {
+  --color-page: #f1f5f9;
+  --color-surface: #ffffff;
+  --color-primary: #1e3a8a;
+  --color-primary-hover: #1e40af;
+  --color-text: #0f172a;
+  --color-muted: #64748b;
+  --color-border: #cbd5e1;
+  --color-danger: #dc2626;
+  --color-success: #16a34a;
+}
+
+/* Uses predictable box sizing across the full app. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Keeps browser font sizing normal and readable. */
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Sets the default app background and readable text color. */
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--color-page);
+  color: var(--color-text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Makes the React root fill the screen. */
+#root {
+  min-height: 100vh;
+}
+
+/* Keeps form elements readable and consistent. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* Prevents buttons from inheriting bad browser styling. */
+button {
+  cursor: pointer;
+}
+
+/* Shows disabled buttons as inactive. */
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Makes all placeholders clearly visible. */
+input::placeholder,
+textarea::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+/* Improves default select and input text visibility. */
+input,
+select,
+textarea {
+  color: #0f172a;
+}
+
+/* Gives keyboard users a visible focus ring. */
+:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+}
+
+/* Smooths only useful interactive properties. */
+button,
+a,
+input,
+select,
+textarea {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+/* Keeps images from overflowing containers. */
+img,
+svg {
+  display: block;
+}
+
+/* Gives the app a cleaner scrollbar. */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Styles scrollbar background. */
+::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+/* Styles scrollbar thumb. */
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 999px;
+  border: 2px solid #e2e8f0;
+}
+
+/* Darkens scrollbar thumb on hover. */
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
