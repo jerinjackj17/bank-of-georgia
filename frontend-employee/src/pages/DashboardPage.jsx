@@ -1,159 +1,76 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { getCustomerById, updateCustomer } from "../services/api";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  getAllCustomers,
+  getAllEmployees,
+  getProducts,
+} from "../services/api";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import ConfirmModal from "../components/ui/ConfirmModal";
-import Input from "../components/ui/Input";
 import { useAuth } from "../context/AuthContext";
 
 export default function DashboardPage() {
-  // Used to return customer to login after logout.
   const navigate = useNavigate();
+  const { employee, user, logoutUser } = useAuth();
 
-  // Reads logged-in customer and auth actions from global auth context.
-  const { user, loginUser, logoutUser } = useAuth();
+  const currentEmployee = employee || user;
 
-  // Controls logout confirmation popup.
   const [showLogout, setShowLogout] = useState(false);
-
-  // Controls edit profile popup.
-  const [showEdit, setShowEdit] = useState(false);
-
-  // Controls save confirmation popup.
-  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
-
-  // Tracks profile update loading state.
-  const [saving, setSaving] = useState(false);
-
-  // Stores page-level error messages.
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [customers, setCustomers] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [products, setProducts] = useState([]);
 
-  // Stores editable customer fields.
-  const [editForm, setEditForm] = useState({
-    firstName: "",
-    lastName: "",
-  });
+  const employeeName = useMemo(() => {
+    const fullName = `${currentEmployee?.firstName || ""} ${currentEmployee?.lastName || ""}`.trim();
 
-  // Gets the customer ID from possible backend field names.
-  const customerId = user?.id || user?.customerId || user?._id;
+    return fullName || currentEmployee?.username || "Employee";
+  }, [currentEmployee]);
 
-  // Gets customer full name for display.
-  const customerName = useMemo(() => {
-    const fullName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
-
-    return fullName || user?.username || user?.email || "Customer";
-  }, [user]);
-
-  // Gets first letter for profile avatar.
-  const customerInitial = customerName.charAt(0).toUpperCase();
-
-  // Keeps edit form synced with logged-in customer.
   useEffect(() => {
-    setEditForm({
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-    });
-  }, [user]);
+    loadDashboardData();
+  }, []);
 
-  // Formats backend date values for cleaner display.
-  function formatDate(value) {
-    if (!value) {
-      return "Not available";
-    }
-
-    return String(value).split("T")[0];
-  }
-
-  // Opens edit modal with current profile values.
-  function openEditProfile() {
-    setError("");
-    setEditForm({
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-    });
-    setShowEdit(true);
-  }
-
-  // Updates one editable profile field.
-  function updateEditField(field, value) {
-    setEditForm((previous) => ({
-      ...previous,
-      [field]: value,
-    }));
-  }
-
-  // Validates edit form before save confirmation.
-  function handleEditSubmit(e) {
-    e.preventDefault();
-
-    if (!editForm.firstName.trim()) {
-      setError("First name is required.");
-      return;
-    }
-
-    if (!editForm.lastName.trim()) {
-      setError("Last name is required.");
-      return;
-    }
-
-    setError("");
-    setShowSaveConfirm(true);
-  }
-
-  // Saves allowed customer profile changes.
-  async function handleSaveProfile() {
-    if (!customerId) {
-      setError("Customer ID is missing. Please log in again.");
-      setShowSaveConfirm(false);
-      return;
-    }
-
-    setSaving(true);
+  async function loadDashboardData() {
+    setLoading(true);
     setError("");
 
     try {
-      const payload = {
-        firstName: editForm.firstName.trim(),
-        lastName: editForm.lastName.trim(),
-      };
+      const [customersResponse, employeesResponse, productsResponse] =
+        await Promise.all([
+          getAllCustomers(),
+          getAllEmployees(),
+          getProducts(),
+        ]);
 
-      const { data } = await updateCustomer(customerId, payload);
-
-      const updatedCustomer = data?.id || data?.customerId ? data : { ...user, ...payload };
-
-      loginUser(updatedCustomer);
-      localStorage.setItem("authUser", JSON.stringify(updatedCustomer));
-
-      setShowSaveConfirm(false);
-      setShowEdit(false);
+      setCustomers(normalizeList(customersResponse.data));
+      setEmployees(normalizeList(employeesResponse.data));
+      setProducts(normalizeList(productsResponse.data));
     } catch (err) {
-      setError(err.message || "Failed to update profile.");
-      setShowSaveConfirm(false);
+      setError(err.message || "Failed to load dashboard data.");
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   }
 
-  // Refreshes logged-in customer from backend.
-  async function refreshProfile() {
-    if (!customerId) {
-      setError("Customer ID is missing. Please log in again.");
-      return;
+  function normalizeList(data) {
+    if (Array.isArray(data)) {
+      return data;
     }
 
-    setError("");
-
-    try {
-      const { data } = await getCustomerById(customerId);
-      loginUser(data);
-      localStorage.setItem("authUser", JSON.stringify(data));
-    } catch (err) {
-      setError(err.message || "Failed to refresh profile.");
+    if (Array.isArray(data?.content)) {
+      return data.content;
     }
+
+    if (Array.isArray(data?.data)) {
+      return data.data;
+    }
+
+    return [];
   }
 
-  // Clears saved login data and returns customer to login page.
   function handleLogout() {
     logoutUser();
     navigate("/login", { replace: true });
@@ -162,202 +79,76 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-900 text-white shadow-lg shadow-blue-900/20">
-              <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2 3 6.5V9h18V6.5L12 2Zm-7 9v7h2v-7H5Zm4 0v7h2v-7H9Zm4 0v7h2v-7h-2Zm4 0v7h2v-7h-2ZM3 20v2h18v-2H3Z" />
-              </svg>
-            </div>
-
-            <div>
-              <h1 className="text-xl font-bold text-slate-950">
-                Bank of Georgia
-              </h1>
-              <p className="text-sm font-medium text-slate-500">
-                Customer Banking Dashboard
-              </p>
-            </div>
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-950">
+              Bank of Georgia
+            </h1>
+            <p className="mt-1 text-sm font-semibold text-slate-500">
+              Employee Portal
+            </p>
           </div>
 
-          <Button variant="outline" onClick={() => setShowLogout(true)}>
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-3">
+            <div className="hidden text-right sm:block">
+              <p className="text-sm font-bold text-slate-900">
+                {employeeName}
+              </p>
+              <p className="text-xs font-medium text-slate-500">
+                {currentEmployee?.role || "Staff"}
+              </p>
+            </div>
+
+            <Button variant="outline" onClick={() => setShowLogout(true)}>
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-6 py-8">
         {error && (
           <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {error}
           </div>
         )}
 
-        <section className="mb-8 overflow-hidden rounded-3xl bg-slate-950 shadow-2xl shadow-slate-300/70">
-          <div className="grid gap-8 p-8 lg:grid-cols-[1fr_320px] lg:p-10">
+        <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-300">
-                My Profile
-              </p>
-
-              <h2 className="mt-4 text-4xl font-bold tracking-tight text-white">
-                Welcome, {customerName}
+              <h2 className="text-2xl font-bold text-slate-950">
+                Dashboard
               </h2>
-
-              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
-                View your customer information and update eligible profile details.
+              <p className="mt-1 text-sm font-medium text-slate-500">
+                Signed in as {employeeName}
               </p>
-
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Customer ID
-                  </p>
-                  <p className="mt-2 truncate text-lg font-bold text-white">
-                    {customerId || "Not available"}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Status
-                  </p>
-                  <p className="mt-2 text-lg font-bold text-emerald-300">
-                    {user?.status || "ACTIVE"}
-                  </p>
-                </div>
-              </div>
             </div>
 
-            <aside className="rounded-3xl border border-white/10 bg-white p-6 text-slate-900">
-              <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-900 text-2xl font-bold text-white">
-                  {customerInitial}
-                </div>
-
-                <div className="min-w-0">
-                  <p className="truncate text-lg font-bold text-slate-950">
-                    {customerName}
-                  </p>
-                  <p className="truncate text-sm font-medium text-slate-500">
-                    {user?.email || user?.phone || "Customer profile"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 grid gap-3">
-                <Button fullWidth onClick={openEditProfile}>
-                  Update Profile
-                </Button>
-
-                <Button fullWidth variant="outline" onClick={refreshProfile}>
-                  Refresh Details
-                </Button>
-              </div>
-            </aside>
+            <Button variant="outline" onClick={loadDashboardData} loading={loading}>
+              Refresh
+            </Button>
           </div>
         </section>
 
-        <Card>
-          <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <h3 className="text-2xl font-bold text-slate-950">
-                Customer Details
-              </h3>
-              <p className="mt-1 text-sm font-medium text-slate-500">
-                Your registered banking profile information.
-              </p>
-            </div>
-          </div>
+        <section className="grid gap-5 md:grid-cols-3">
+          <StatCard title="Customers" value={customers.length} loading={loading} />
+          <StatCard title="Employees" value={employees.length} loading={loading} />
+          <StatCard title="Products" value={products.length} loading={loading} />
+        </section>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <DetailItem label="First Name" value={user?.firstName} />
-            <DetailItem label="Last Name" value={user?.lastName} />
-            <DetailItem label="Username" value={user?.username || user?.loginId} />
-            <DetailItem label="Email" value={user?.email} />
-            <DetailItem label="Phone" value={user?.phone || user?.phoneNumber} />
-            <DetailItem label="Date of Birth" value={formatDate(user?.dateOfBirth)} />
-            <DetailItem label="Status" value={user?.status || "ACTIVE"} />
-            <DetailItem label="Created At" value={formatDate(user?.createdAt)} />
-          </div>
-        </Card>
+        <section className="mt-8 grid gap-6 lg:grid-cols-3">
+          <ActionCard title="Customers" to="/customers" />
+          <ActionCard title="Employees" to="/employees" />
+          <ActionCard title="Products" to="/products" />
+        </section>
       </main>
-
-      {showEdit && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
-          <Card className="w-full max-w-lg">
-            <div className="mb-6">
-              <h3 className="text-2xl font-bold text-slate-950">
-                Update Profile
-              </h3>
-              <p className="mt-2 text-sm text-slate-500">
-                Only basic name fields can be updated here. Email, phone number, username, date of birth, and status are bank-verified fields.
-              </p>
-            </div>
-
-            <form onSubmit={handleEditSubmit} className="space-y-5">
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Input
-                  label="First Name"
-                  id="firstName"
-                  value={editForm.firstName}
-                  onChange={(e) => updateEditField("firstName", e.target.value)}
-                  required
-                />
-
-                <Input
-                  label="Last Name"
-                  id="lastName"
-                  value={editForm.lastName}
-                  onChange={(e) => updateEditField("lastName", e.target.value)}
-                  required
-                />
-              </div>
-
-              <ReadOnlyField label="Email" value={user?.email} />
-              <ReadOnlyField label="Phone" value={user?.phone || user?.phoneNumber} />
-              <ReadOnlyField label="Date of Birth" value={formatDate(user?.dateOfBirth)} />
-
-              <div className="grid gap-3 pt-2 sm:grid-cols-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  fullWidth
-                  onClick={() => {
-                    setShowEdit(false);
-                    setError("");
-                  }}
-                  disabled={saving}
-                >
-                  Cancel
-                </Button>
-
-                <Button type="submit" fullWidth loading={saving}>
-                  Save Changes
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      )}
-
-      <ConfirmModal
-        open={showSaveConfirm}
-        title="Save profile changes?"
-        message="This will update your customer profile name."
-        confirmLabel="Save Changes"
-        cancelLabel="Review"
-        onConfirm={handleSaveProfile}
-        onCancel={() => setShowSaveConfirm(false)}
-        loading={saving}
-      />
 
       <ConfirmModal
         open={showLogout}
         title="Sign out?"
-        message="You will be returned to the login screen."
-        confirmLabel="Yes, sign out"
-        cancelLabel="Stay"
+        message="You will be returned to the employee login screen."
+        confirmLabel="Sign out"
+        cancelLabel="Cancel"
         variant="danger"
         onConfirm={handleLogout}
         onCancel={() => setShowLogout(false)}
@@ -366,30 +157,29 @@ export default function DashboardPage() {
   );
 }
 
-// Displays one customer detail row.
-function DetailItem({ label, value }) {
+function StatCard({ title, value, loading }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-        {label}
+    <Card>
+      <p className="text-sm font-bold uppercase tracking-wider text-slate-500">
+        {title}
       </p>
-      <p className="mt-2 break-words text-base font-bold text-slate-950">
-        {value || "Not available"}
+      <p className="mt-3 text-4xl font-bold text-slate-950">
+        {loading ? "..." : value}
       </p>
-    </div>
+    </Card>
   );
 }
 
-// Displays locked fields inside the profile update modal.
-function ReadOnlyField({ label, value }) {
+function ActionCard({ title, to }) {
   return (
-    <div>
-      <label className="mb-2 block text-sm font-bold text-slate-800">
-        {label}
-      </label>
-      <div className="flex h-12 items-center rounded-xl border border-slate-300 bg-slate-100 px-4 text-sm font-semibold text-slate-600">
-        {value || "Not available"}
-      </div>
-    </div>
+    <Card>
+      <h3 className="text-xl font-bold text-slate-950">{title}</h3>
+      <Link
+        to={to}
+        className="mt-6 inline-flex rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
+      >
+        Open
+      </Link>
+    </Card>
   );
 }
