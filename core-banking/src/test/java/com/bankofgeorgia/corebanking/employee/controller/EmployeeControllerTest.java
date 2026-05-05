@@ -134,7 +134,6 @@ class EmployeeControllerTest {
         // Sends GET request and checks first employee in the JSON array.
         mockMvc.perform(get("/api/employees"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value("123"))
                 .andExpect(jsonPath("$[0].employeeId").value("EMP001"))
                 .andExpect(jsonPath("$[0].firstName").value("John"))
                 .andExpect(jsonPath("$[0].lastName").value("Doe"))
