@@ -6,8 +6,7 @@ import com.bankofgeorgia.corebanking.product.dto.ProductStatusUpdateRequestDTO;
 import com.bankofgeorgia.corebanking.product.dto.UpdateProductRequestDTO;
 import com.bankofgeorgia.corebanking.product.service.ProductService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +14,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
-
-    private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
 
     private final ProductService productService;
 
@@ -30,15 +28,15 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<?> createProduct(@RequestBody ProductRequestDTO request) {
         // Product creation is handled by employee/admin users.
-        logger.info("Received product creation request for product name: {}", request.getProductName());
+        log.info("Received product creation request for product name: {}", request.getProductName());
 
         try {
             ProductResponseDTO response = productService.createProduct(request);
 
-            logger.info("Product created successfully with id: {}", response.getId());
+            log.info("Product created successfully with id: {}", response.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException ex) {
-            logger.error("Product creation failed for product name: {}", request.getProductName(), ex);
+            log.error("Product creation failed for product name: {}", request.getProductName(), ex);
 
             return ResponseEntity
                     .status(resolveStatus(ex.getMessage()))
@@ -49,15 +47,15 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<?> getAllProducts() {
         // Product list is used by employee/admin screens.
-        logger.info("Received request to fetch all products");
+        log.info("Received request to fetch all products");
 
         try {
             List<ProductResponseDTO> response = productService.getAllProducts();
 
-            logger.info("Fetched {} products", response.size());
+            log.info("Fetched {} products", response.size());
             return ResponseEntity.ok(response);
         } catch (RuntimeException ex) {
-            logger.error("Failed to fetch products", ex);
+            log.error("Failed to fetch products", ex);
 
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -68,15 +66,15 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getProductById(@PathVariable String id) {
         // Product details are fetched before edit or account opening.
-        logger.info("Received request to fetch product with id: {}", id);
+        log.info("Received request to fetch product with id: {}", id);
 
         try {
             ProductResponseDTO response = productService.getProductById(id);
 
-            logger.info("Product fetched successfully with id: {}", id);
+            log.info("Product fetched successfully with id: {}", id);
             return ResponseEntity.ok(response);
         } catch (RuntimeException ex) {
-            logger.error("Failed to fetch product with id: {}", id, ex);
+            log.error("Failed to fetch product with id: {}", id, ex);
 
             return ResponseEntity
                     .status(resolveStatus(ex.getMessage()))
@@ -89,15 +87,15 @@ public class ProductController {
             @PathVariable String id,
             @RequestBody UpdateProductRequestDTO request) {
         // Product configuration changes are tracked with employee id.
-        logger.info("Received product update request for id: {}", id);
+        log.info("Received product update request for id: {}", id);
 
         try {
             ProductResponseDTO response = productService.updateProduct(id, request);
 
-            logger.info("Product updated successfully with id: {}", id);
+            log.info("Product updated successfully with id: {}", id);
             return ResponseEntity.ok(response);
         } catch (RuntimeException ex) {
-            logger.error("Product update failed for id: {}", id, ex);
+            log.error("Product update failed for id: {}", id, ex);
 
             return ResponseEntity
                     .status(resolveStatus(ex.getMessage()))
@@ -110,15 +108,15 @@ public class ProductController {
             @PathVariable String id,
             @RequestBody ProductStatusUpdateRequestDTO request) {
         // Product status controls whether new accounts can use this product.
-        logger.info("Received product status update request for id: {}", id);
+        log.info("Received product status update request for id: {}", id);
 
         try {
             ProductResponseDTO response = productService.updateProductStatus(id, request);
 
-            logger.info("Product status updated successfully with id: {}", id);
+            log.info("Product status updated successfully with id: {}", id);
             return ResponseEntity.ok(response);
         } catch (RuntimeException ex) {
-            logger.error("Product status update failed for id: {}", id, ex);
+            log.error("Product status update failed for id: {}", id, ex);
 
             return ResponseEntity
                     .status(resolveStatus(ex.getMessage()))

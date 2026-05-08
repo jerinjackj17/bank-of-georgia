@@ -7,8 +7,7 @@ import com.bankofgeorgia.corebanking.employee.dto.UpdateEmployeeRequestDTO;
 import com.bankofgeorgia.corebanking.employee.dto.UpdateEmployeeRoleRequestDTO;
 import com.bankofgeorgia.corebanking.employee.entity.Employee;
 import com.bankofgeorgia.corebanking.employee.repository.EmployeeRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,10 +16,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.util.List;
 
+@Slf4j
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
-
-    private static final Logger logger = LoggerFactory.getLogger(EmployeeServiceImpl.class);
 
     private final EmployeeRepository employeeRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -34,7 +32,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public EmployeeResponseDTO createEmployee(CreateEmployeeRequestDTO request) {
 
-        logger.info("Creating employee with email: {}", request.getEmail());
+        log.info("Creating employee with email: {}", request.getEmail());
 
         // check duplicate email
         if (employeeRepository.existsByEmail(request.getEmail())) {
@@ -69,7 +67,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // save to database
         Employee saved = employeeRepository.save(employee);
 
-        logger.info("Employee created successfully with id: {}", saved.getId());
+        log.info("Employee created successfully with id: {}", saved.getId());
 
         return toResponse(saved);
     }
@@ -77,7 +75,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public List<EmployeeResponseDTO> getAllEmployees() {
 
-        logger.info("Fetching all employees");
+        log.info("Fetching all employees");
 
         return employeeRepository.findAll()
                 .stream()
@@ -91,7 +89,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findByEmployeeId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found"));
 
-        logger.info("Fetched employee with id: {}", id);
+        log.info("Fetched employee with id: {}", id);
 
         return toResponse(employee);
     }
@@ -102,7 +100,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findByEmployeeId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found"));
 
-        logger.info("Updating employee with id: {}", id);
+        log.info("Updating employee with id: {}", id);
 
         // update allowed fields only
         if (request.getFirstName() != null) {
@@ -127,7 +125,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Employee updated = employeeRepository.save(employee);
 
-        logger.info("Employee updated successfully for id: {}", id);
+        log.info("Employee updated successfully for id: {}", id);
 
         return toResponse(updated);
     }
@@ -145,7 +143,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid employee status. Must be ACTIVE or INACTIVE");
         }
 
-        logger.info("Updating employee status for id: {} to {}", id, status);
+        log.info("Updating employee status for id: {} to {}", id, status);
 
         employee.setStatus(status.toUpperCase());
 
@@ -164,7 +162,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role cannot be empty");
         }
 
-        logger.info("Updating employee role for id: {} to {}", id, request.getRole());
+        log.info("Updating employee role for id: {} to {}", id, request.getRole());
 
         employee.setRole(request.getRole());
 
