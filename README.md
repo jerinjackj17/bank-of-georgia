@@ -6,10 +6,11 @@ Microservices-based digital banking system built with Spring Boot and React.
 
 | Service | Port | Description |
 |---|---|---|
-| `core-banking` | 8080 | Main service — customer, employee, and auth management |
+| `core-banking` | 8080 | Main service — customer, employee, product, account, and auth management |
 | `notification-service` | 8082 | SMS delivery via Twilio |
 | `event-service` | 8081 | Event service (in progress) |
-| `frontend` | 3000 | React/Vite web client |
+| `frontend-customer` | 5173 | Customer-facing React/Vite app |
+| `frontend-employee` | 5174 | Employee portal React/Vite app |
 
 ## Tech Stack
 
@@ -100,11 +101,13 @@ Microservices-based digital banking system built with Spring Boot and React.
 
 ### Employees — `/api/employees`
 
+Employee IDs are human-readable (e.g. `EMP001`) and are used as path variables, not the MongoDB `_id`.
+
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | `/api/employees` | Create a new employee |
 | GET | `/api/employees` | List all employees |
-| GET | `/api/employees/{id}` | Get employee by ID |
+| GET | `/api/employees/{id}` | Get employee by `employeeId` |
 | PUT | `/api/employees/{id}` | Update employee profile |
 | PUT | `/api/employees/{id}/role` | Update employee role |
 | PUT | `/api/employees/{id}/status` | Update employee status (`ACTIVE` / `INACTIVE`) |
@@ -121,9 +124,13 @@ Microservices-based digital banking system built with Spring Boot and React.
   "dateOfBirth": "1988-06-15",
   "employeeId": "EMP001",
   "role": "TELLER",
-  "department": "RETAIL"
+  "department": "OPERATIONS"
 }
 ```
+
+Valid roles: `ADMIN`, `MANAGER`, `TELLER`, `SUPPORT`
+
+Valid departments: `OPERATIONS`, `CUSTOMER_SERVICE`, `PRODUCTS`, `COMPLIANCE`
 
 **Update profile request** (`PUT /api/employees/{id}`) — all fields optional:
 ```json
@@ -132,7 +139,7 @@ Microservices-based digital banking system built with Spring Boot and React.
   "lastName": "Smith",
   "phone": "+15559876543",
   "dateOfBirth": "1988-06-15",
-  "department": "OPERATIONS"
+  "department": "COMPLIANCE"
 }
 ```
 
@@ -152,11 +159,101 @@ Microservices-based digital banking system built with Spring Boot and React.
 
 ---
 
+### Products — `/api/products`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/products` | Create a new product |
+| GET | `/api/products` | List all products |
+| GET | `/api/products/{id}` | Get product by ID |
+| PUT | `/api/products/{id}` | Update product details |
+| PUT | `/api/products/{id}/status` | Update product status (`ACTIVE` / `INACTIVE`) |
+
+**Create request:**
+```json
+{
+  "productName": "Basic Savings",
+  "productType": "SAVINGS_ACCOUNT",
+  "description": "Standard savings account with no monthly fee",
+  "monthlyMaintenanceFee": "0.00",
+  "minimumBalance": "50.00",
+  "createdByEmployeeId": "EMP001"
+}
+```
+
+Valid product types: `CHECKING_ACCOUNT`, `SAVINGS_ACCOUNT`, `CERTIFICATE_OF_DEPOSIT`, `BUSINESS_CHECKING_ACCOUNT`, `STUDENT_SAVINGS_ACCOUNT`
+
+**Update request** (`PUT /api/products/{id}`) — all fields optional:
+```json
+{
+  "productName": "Basic Savings",
+  "description": "Updated description",
+  "monthlyMaintenanceFee": "2.00",
+  "minimumBalance": "100.00",
+  "updatedByEmployeeId": "EMP001"
+}
+```
+
+**Update status request** (`PUT /api/products/{id}/status`):
+```json
+{
+  "status": "INACTIVE",
+  "updatedByEmployeeId": "EMP001"
+}
+```
+
+---
+
+### Accounts — `/api/accounts`
+
+Account numbers are auto-generated (e.g. `ACC000001`) and are used as path variables.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/accounts` | Open a new account |
+| GET | `/api/accounts` | List all accounts |
+| GET | `/api/accounts/{accountNumber}` | Get account by account number |
+| GET | `/api/accounts/customer/{customerId}` | List all accounts for a customer |
+| PUT | `/api/accounts/{accountNumber}` | Update account (e.g. product migration) |
+| PUT | `/api/accounts/{accountNumber}/status` | Update account status (`ACTIVE` / `FROZEN` / `CLOSED`) |
+
+**Open account request:**
+```json
+{
+  "customerId": "64a1f2b3c4d5e6f7a8b9c0d1",
+  "productId": "64a1f2b3c4d5e6f7a8b9c0d2",
+  "openedByEmployeeId": "EMP001"
+}
+```
+
+- The customer must exist and the product must be `ACTIVE`.
+- Balance is initialized to `0.00` and is managed by future transaction endpoints.
+
+**Update account request** (`PUT /api/accounts/{accountNumber}`) — all fields optional:
+```json
+{
+  "productId": "64a1f2b3c4d5e6f7a8b9c0d3",
+  "updatedByEmployeeId": "EMP001"
+}
+```
+
+**Update status request** (`PUT /api/accounts/{accountNumber}/status`):
+```json
+{
+  "status": "FROZEN",
+  "updatedByEmployeeId": "EMP001"
+}
+```
+
+---
+
 ### Notifications — `/api/notifications`
 
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | `/api/notifications/otp` | Send OTP SMS (called internally by core-banking) |
+
+---
 
 ## Running with Docker
 
@@ -181,6 +278,8 @@ TWILIO_PHONE_NUMBER=your_twilio_phone_number
 docker compose up --build
 ```
 
+---
+
 ## Running Locally (without Docker)
 
 ### Backend
@@ -203,18 +302,27 @@ cd notification-service && ./mvnw spring-boot:run
 
 ### Frontend
 
-Copy the environment template and install dependencies:
+Each frontend is a separate Vite app. Run them in separate terminals:
 
 ```bash
-cd frontend
+# Customer app — http://localhost:5173
+cd frontend-customer
 cp .env.example .env
 npm install
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:3000`.
+```bash
+# Employee portal — http://localhost:5174
+cd frontend-employee
+cp .env.example .env
+npm install
+npm run dev
+```
 
-> To point the frontend at a different backend, update `VITE_API_URL` in `frontend/.env` and rebuild.
+> To point either frontend at a different backend, update `VITE_API_BASE_URL` in its `.env` file.
+
+---
 
 ## Branch Strategy
 

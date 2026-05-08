@@ -1,20 +1,18 @@
 package com.bankofgeorgia.corebanking.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+@Slf4j
 @Configuration
 public class CorsConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(CorsConfig.class);
-
     @Bean
     public WebMvcConfigurer corsConfigurer() {
-        logger.info("CORS configuration loaded for customer and employee frontends");
+        log.info("CORS configuration loaded for customer and employee frontends");
 
         return new WebMvcConfigurer() {
 

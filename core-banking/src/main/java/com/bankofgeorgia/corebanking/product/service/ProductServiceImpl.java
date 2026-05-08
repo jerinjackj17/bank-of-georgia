@@ -7,8 +7,7 @@ import com.bankofgeorgia.corebanking.product.dto.UpdateProductRequestDTO;
 import com.bankofgeorgia.corebanking.product.entity.Product;
 import com.bankofgeorgia.corebanking.product.repository.ProductRepository;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 
@@ -16,10 +15,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
+@Slf4j
 @Service
 public class ProductServiceImpl implements ProductService {
-
-    private static final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
 
     private static final String STATUS_ACTIVE = "ACTIVE";
     private static final String STATUS_INACTIVE = "INACTIVE";
@@ -33,7 +31,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponseDTO createProduct(ProductRequestDTO request) {
 
-        logger.info("Creating product with name: {}", request.getProductName());
+        log.info("Creating product with name: {}", request.getProductName());
 
         validateCreateRequest(request);
 
@@ -41,12 +39,12 @@ public class ProductServiceImpl implements ProductService {
         String productType = request.getProductType().trim().toUpperCase();
 
         if (productRepository.existsByProductName(productName)) {
-            logger.warn("Product creation failed. Product name already exists: {}", productName);
+            log.warn("Product creation failed. Product name already exists: {}", productName);
             throw new RuntimeException("Product name already exists");
         }
 
         if (productRepository.existsByProductType(productType)) {
-            logger.warn("Product creation failed. Product type already exists: {}", productType);
+            log.warn("Product creation failed. Product type already exists: {}", productType);
             throw new RuntimeException("Product type already exists");
         }
 
@@ -66,7 +64,7 @@ public class ProductServiceImpl implements ProductService {
 
         Product saved = productRepository.save(product);
 
-        logger.info("Product created successfully with id: {}", saved.getId());
+        log.info("Product created successfully with id: {}", saved.getId());
 
         return mapToResponse(saved);
     }
@@ -74,7 +72,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<ProductResponseDTO> getAllProducts() {
 
-        logger.info("Fetching all products");
+        log.info("Fetching all products");
 
         return productRepository.findAll()
                 .stream()
@@ -85,7 +83,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponseDTO getProductById(String id) {
 
-        logger.info("Fetching product with id: {}", id);
+        log.info("Fetching product with id: {}", id);
 
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -96,7 +94,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponseDTO updateProduct(String id, UpdateProductRequestDTO request) {
 
-        logger.info("Updating product with id: {}", id);
+        log.info("Updating product with id: {}", id);
 
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -107,7 +105,7 @@ public class ProductServiceImpl implements ProductService {
             productRepository.findByProductName(productName)
                     .filter(existingProduct -> !existingProduct.getId().equals(id))
                     .ifPresent(existingProduct -> {
-                        logger.warn("Product update failed. Product name already exists: {}", productName);
+                        log.warn("Product update failed. Product name already exists: {}", productName);
                         throw new RuntimeException("Product name already exists");
                     });
 
@@ -136,7 +134,7 @@ public class ProductServiceImpl implements ProductService {
 
         Product updated = productRepository.save(product);
 
-        logger.info("Product updated successfully with id: {}", updated.getId());
+        log.info("Product updated successfully with id: {}", updated.getId());
 
         return mapToResponse(updated);
     }
@@ -144,7 +142,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponseDTO updateProductStatus(String id, ProductStatusUpdateRequestDTO request) {
 
-        logger.info("Updating product status for id: {}", id);
+        log.info("Updating product status for id: {}", id);
 
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -157,7 +155,7 @@ public class ProductServiceImpl implements ProductService {
 
         Product updated = productRepository.save(product);
 
-        logger.info("Product status updated successfully for id: {} to {}", updated.getId(), status);
+        log.info("Product status updated successfully for id: {} to {}", updated.getId(), status);
 
         return mapToResponse(updated);
     }
