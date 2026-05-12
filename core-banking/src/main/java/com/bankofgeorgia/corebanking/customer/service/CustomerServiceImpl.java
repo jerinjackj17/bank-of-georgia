@@ -1,5 +1,8 @@
 package com.bankofgeorgia.corebanking.customer.service;
 
+import com.bankofgeorgia.corebanking.common.exception.BadRequestException;
+import com.bankofgeorgia.corebanking.common.exception.ConflictException;
+import com.bankofgeorgia.corebanking.common.exception.ResourceNotFoundException;
 import com.bankofgeorgia.corebanking.customer.dto.CustomerRequestDTO;
 import com.bankofgeorgia.corebanking.customer.dto.CustomerResponseDTO;
 import com.bankofgeorgia.corebanking.customer.dto.CustomerStatusUpdateRequestDTO;
@@ -7,8 +10,7 @@ import com.bankofgeorgia.corebanking.customer.dto.UpdateCustomerRequestDTO;
 import com.bankofgeorgia.corebanking.customer.entity.Customer;
 import com.bankofgeorgia.corebanking.customer.repository.CustomerRepository;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,10 +18,9 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 
+@Slf4j
 @Service
 public class CustomerServiceImpl implements CustomerService {
-
-    private static final Logger logger = LoggerFactory.getLogger(CustomerServiceImpl.class);
 
     private final CustomerRepository customerRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -33,16 +34,16 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public CustomerResponseDTO registerCustomer(CustomerRequestDTO request) {
 
-        logger.info("Registering customer with email: {}", request.getEmail());
+        log.info("Registering customer with email: {}", request.getEmail());
 
         // check duplicate email
         if (customerRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new ConflictException("Email already exists");
         }
 
         // check duplicate username
         if (customerRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new ConflictException("Username already exists");
         }
 
         // map request to entity
@@ -77,7 +78,7 @@ public class CustomerServiceImpl implements CustomerService {
                 saved.getStatus(),
                 saved.getCreatedAt().toString());
 
-        logger.info("Customer registered successfully with id: {}", saved.getId());
+        log.info("Customer registered successfully with id: {}", saved.getId());
 
         return response;
     }
@@ -87,9 +88,9 @@ public class CustomerServiceImpl implements CustomerService {
 
         // fetch existing customer
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 
-        logger.info("Updating customer with id: {}", id);
+        log.info("Updating customer with id: {}", id);
 
         // update allowed fields only
         if (request.getFirstName() != null) {
@@ -123,7 +124,7 @@ public class CustomerServiceImpl implements CustomerService {
                 updated.getStatus(),
                 updated.getCreatedAt().toString());
 
-        logger.info("Customer updated successfully for id: {}", id);
+        log.info("Customer updated successfully for id: {}", id);
 
         return response;
     }
@@ -132,9 +133,9 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerResponseDTO getCustomerById(String id) {
 
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 
-        logger.info("Fetched customer with id: {}", id);
+        log.info("Fetched customer with id: {}", id);
 
         return new CustomerResponseDTO(
                 customer.getId(),
@@ -151,7 +152,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public List<CustomerResponseDTO> getAllCustomers() {
 
-        logger.info("Fetching all customers");
+        log.info("Fetching all customers");
 
         return customerRepository.findAll()
                 .stream()
@@ -173,16 +174,16 @@ public class CustomerServiceImpl implements CustomerService {
 
         // fetch customer
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 
         String status = request.getStatus();
 
         // validate allowed status
         if (!"ACTIVE".equalsIgnoreCase(status) && !"BLOCKED".equalsIgnoreCase(status)) {
-            throw new RuntimeException("Invalid customer status");
+            throw new BadRequestException("Invalid customer status");
         }
 
-        logger.info("Updating customer status for id: {} to {}", id, status);
+        log.info("Updating customer status for id: {} to {}", id, status);
 
         customer.setStatus(status.toUpperCase());
 

@@ -11,6 +11,8 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
+    // Creates the BCrypt password encoder used for hashing and verifying passwords.
+    // Strength is read from application.properties (defaults to 10 if not set).
     @Bean
     public BCryptPasswordEncoder passwordEncoder(@Value("${bcrypt.strength:10}") int strength) {
         return new BCryptPasswordEncoder(strength);
