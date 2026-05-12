@@ -1,5 +1,8 @@
 package com.bankofgeorgia.corebanking.product.service;
 
+import com.bankofgeorgia.corebanking.common.exception.BadRequestException;
+import com.bankofgeorgia.corebanking.common.exception.ConflictException;
+import com.bankofgeorgia.corebanking.common.exception.ResourceNotFoundException;
 import com.bankofgeorgia.corebanking.product.dto.ProductRequestDTO;
 import com.bankofgeorgia.corebanking.product.dto.ProductResponseDTO;
 import com.bankofgeorgia.corebanking.product.dto.ProductStatusUpdateRequestDTO;
@@ -40,12 +43,12 @@ public class ProductServiceImpl implements ProductService {
 
         if (productRepository.existsByProductName(productName)) {
             log.warn("Product creation failed. Product name already exists: {}", productName);
-            throw new RuntimeException("Product name already exists");
+            throw new ConflictException("Product name already exists");
         }
 
         if (productRepository.existsByProductType(productType)) {
             log.warn("Product creation failed. Product type already exists: {}", productType);
-            throw new RuntimeException("Product type already exists");
+            throw new ConflictException("Product type already exists");
         }
 
         Instant now = Instant.now();
@@ -86,7 +89,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Fetching product with id: {}", id);
 
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         return mapToResponse(product);
     }
@@ -97,7 +100,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Updating product with id: {}", id);
 
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         if (request.getProductName() != null && !request.getProductName().isBlank()) {
             String productName = request.getProductName().trim();
@@ -106,7 +109,7 @@ public class ProductServiceImpl implements ProductService {
                     .filter(existingProduct -> !existingProduct.getId().equals(id))
                     .ifPresent(existingProduct -> {
                         log.warn("Product update failed. Product name already exists: {}", productName);
-                        throw new RuntimeException("Product name already exists");
+                        throw new ConflictException("Product name already exists");
                     });
 
             product.setProductName(productName);
@@ -145,7 +148,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Updating product status for id: {}", id);
 
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         String status = normalizeStatus(request.getStatus());
 
@@ -163,11 +166,11 @@ public class ProductServiceImpl implements ProductService {
     private void validateCreateRequest(ProductRequestDTO request) {
 
         if (request.getProductName() == null || request.getProductName().isBlank()) {
-            throw new RuntimeException("Product name is required");
+            throw new BadRequestException("Product name is required");
         }
 
         if (request.getProductType() == null || request.getProductType().isBlank()) {
-            throw new RuntimeException("Product type is required");
+            throw new BadRequestException("Product type is required");
         }
 
         validateProductType(request.getProductType());
@@ -184,31 +187,31 @@ public class ProductServiceImpl implements ProductService {
                 && !"CERTIFICATE_OF_DEPOSIT".equals(normalizedType)
                 && !"BUSINESS_CHECKING_ACCOUNT".equals(normalizedType)
                 && !"STUDENT_SAVINGS_ACCOUNT".equals(normalizedType)) {
-            throw new RuntimeException("Invalid product type");
+            throw new BadRequestException("Invalid product type");
         }
     }
 
     private void validateMoneyField(BigDecimal value, String fieldName) {
 
         if (value == null) {
-            throw new RuntimeException(fieldName + " is required");
+            throw new BadRequestException(fieldName + " is required");
         }
 
         if (value.compareTo(BigDecimal.ZERO) < 0) {
-            throw new RuntimeException(fieldName + " cannot be negative");
+            throw new BadRequestException(fieldName + " cannot be negative");
         }
     }
 
     private String normalizeStatus(String status) {
 
         if (status == null || status.isBlank()) {
-            throw new RuntimeException("Product status is required");
+            throw new BadRequestException("Product status is required");
         }
 
         String normalizedStatus = status.trim().toUpperCase();
 
         if (!STATUS_ACTIVE.equals(normalizedStatus) && !STATUS_INACTIVE.equals(normalizedStatus)) {
-            throw new RuntimeException("Invalid product status");
+            throw new BadRequestException("Invalid product status");
         }
 
         return normalizedStatus;

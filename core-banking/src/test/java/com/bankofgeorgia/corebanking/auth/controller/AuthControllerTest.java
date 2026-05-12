@@ -9,6 +9,7 @@ import com.bankofgeorgia.corebanking.auth.dto.OtpVerificationRequestDTO;
 import com.bankofgeorgia.corebanking.auth.service.AuthService;
 import com.bankofgeorgia.corebanking.auth.service.EmployeeAuthService;
 import com.bankofgeorgia.corebanking.auth.service.OtpService;
+import com.bankofgeorgia.corebanking.common.exception.GlobalExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
@@ -47,8 +47,10 @@ class AuthControllerTest {
         // Creates the controller with the mocked services.
         AuthController authController = new AuthController(authService, otpService, employeeAuthService);
 
-        // Builds MockMvc without starting the full Spring Boot application.
-        mockMvc = standaloneSetup(authController).build();
+        // Registers global exception handling for standalone MockMvc tests.
+        mockMvc = standaloneSetup(authController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
 
         // Converts Java objects into JSON request bodies.
         objectMapper = new ObjectMapper();
@@ -79,7 +81,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void login_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Builds a valid request, but the service will fail.
         LoginRequestDTO request = new LoginRequestDTO("username", "john1", "wrongpassword");
 
@@ -87,12 +89,12 @@ class AuthControllerTest {
         when(authService.login(any(LoginRequestDTO.class)))
                 .thenThrow(new RuntimeException("Invalid password for user: john1"));
 
-        // Sends POST request and expects the controller to return HTTP 500.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(post("/api/auth/customer/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Invalid password for user: john1"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that the auth service was called.
         verify(authService).login(any(LoginRequestDTO.class));
@@ -124,7 +126,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void requestOtp_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void requestOtp_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Builds a valid request, but the service will fail.
         OtpRequestDTO request = new OtpRequestDTO("0000000000");
 
@@ -132,12 +134,12 @@ class AuthControllerTest {
         when(otpService.requestOtp(any(OtpRequestDTO.class)))
                 .thenThrow(new RuntimeException("Phone number not registered"));
 
-        // Sends POST request and expects the controller to return HTTP 500.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(post("/api/auth/customer/login/phone")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Phone number not registered"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that the OTP service was called.
         verify(otpService).requestOtp(any(OtpRequestDTO.class));
@@ -168,7 +170,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void verifyOtp_ShouldReturnServerError_WhenOtpIsInvalid() throws Exception {
+    void verifyOtp_ShouldReturnInternalServerError_WhenOtpIsInvalid() throws Exception {
         // Builds a request with an incorrect or expired OTP code.
         OtpVerificationRequestDTO request = new OtpVerificationRequestDTO("9999999999", "000000");
 
@@ -176,12 +178,12 @@ class AuthControllerTest {
         when(otpService.verifyOtp(any(OtpVerificationRequestDTO.class)))
                 .thenThrow(new RuntimeException("OTP verification failed"));
 
-        // Sends POST request and expects the controller to return HTTP 500.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(post("/api/auth/customer/login/verifyOtp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("OTP verification failed"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that the OTP service was called.
         verify(otpService).verifyOtp(any(OtpVerificationRequestDTO.class));
@@ -212,7 +214,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void employeeLogin_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void employeeLogin_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Builds a valid request, but the service will fail.
         EmployeeLoginRequestDTO request = new EmployeeLoginRequestDTO("emp1", "wrongpassword");
 
@@ -220,12 +222,12 @@ class AuthControllerTest {
         when(employeeAuthService.loginByUsername(any(EmployeeLoginRequestDTO.class)))
                 .thenThrow(new RuntimeException("Invalid password for employee: emp1"));
 
-        // Sends POST request and expects the controller to return HTTP 500.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(post("/api/auth/employee/login/username")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Invalid password for employee: emp1"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that the employee auth service was called.
         verify(employeeAuthService).loginByUsername(any(EmployeeLoginRequestDTO.class));

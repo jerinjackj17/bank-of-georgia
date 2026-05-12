@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -25,126 +24,68 @@ public class AccountController {
     }
 
     @PostMapping
-    public ResponseEntity<?> openAccount(@RequestBody OpenAccountRequestDTO request) {
+    public ResponseEntity<AccountResponseDTO> openAccount(@RequestBody OpenAccountRequestDTO request) {
         log.info("Received request to open account for customerId: {}", request.getCustomerId());
 
-        try {
-            AccountResponseDTO response = accountService.openAccount(request);
+        AccountResponseDTO response = accountService.openAccount(request);
 
-            log.info("Account opened successfully with accountNumber: {}", response.getAccountNumber());
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (ResponseStatusException ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            log.error("Failed to open account for customerId: {}", request.getCustomerId(), ex);
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ex.getMessage());
-        }
+        log.info("Account opened successfully with accountNumber: {}", response.getAccountNumber());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllAccounts() {
+    public ResponseEntity<List<AccountResponseDTO>> getAllAccounts() {
         log.info("Received request to fetch all accounts");
 
-        try {
-            List<AccountResponseDTO> response = accountService.getAllAccounts();
+        List<AccountResponseDTO> response = accountService.getAllAccounts();
 
-            log.info("Fetched {} accounts", response.size());
-            return ResponseEntity.ok(response);
-        } catch (ResponseStatusException ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            log.error("Failed to fetch all accounts", ex);
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ex.getMessage());
-        }
+        log.info("Fetched {} accounts", response.size());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{accountNumber}")
-    public ResponseEntity<?> getAccountByAccountNumber(@PathVariable String accountNumber) {
+    public ResponseEntity<AccountResponseDTO> getAccountByAccountNumber(@PathVariable String accountNumber) {
         log.info("Received request to fetch account with accountNumber: {}", accountNumber);
 
-        try {
-            AccountResponseDTO response = accountService.getAccountByAccountNumber(accountNumber);
+        AccountResponseDTO response = accountService.getAccountByAccountNumber(accountNumber);
 
-            log.info("Account fetched successfully with accountNumber: {}", accountNumber);
-            return ResponseEntity.ok(response);
-        } catch (ResponseStatusException ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            log.error("Failed to fetch account with accountNumber: {}", accountNumber, ex);
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ex.getMessage());
-        }
+        log.info("Account fetched successfully with accountNumber: {}", accountNumber);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<?> getAccountsByCustomerId(@PathVariable String customerId) {
+    public ResponseEntity<List<AccountResponseDTO>> getAccountsByCustomerId(@PathVariable String customerId) {
         log.info("Received request to fetch accounts for customerId: {}", customerId);
 
-        try {
-            List<AccountResponseDTO> response = accountService.getAccountsByCustomerId(customerId);
+        List<AccountResponseDTO> response = accountService.getAccountsByCustomerId(customerId);
 
-            log.info("Fetched {} accounts for customerId: {}", response.size(), customerId);
-            return ResponseEntity.ok(response);
-        } catch (ResponseStatusException ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            log.error("Failed to fetch accounts for customerId: {}", customerId, ex);
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ex.getMessage());
-        }
+        log.info("Fetched {} accounts for customerId: {}", response.size(), customerId);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{accountNumber}")
-    public ResponseEntity<?> updateAccount(
+    public ResponseEntity<AccountResponseDTO> updateAccount(
             @PathVariable String accountNumber,
             @RequestBody UpdateAccountRequestDTO request) {
+
         log.info("Received update request for accountNumber: {}", accountNumber);
 
-        try {
-            AccountResponseDTO response = accountService.updateAccount(accountNumber, request);
+        AccountResponseDTO response = accountService.updateAccount(accountNumber, request);
 
-            log.info("Account updated successfully with accountNumber: {}", accountNumber);
-            return ResponseEntity.ok(response);
-        } catch (ResponseStatusException ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            log.error("Failed to update account with accountNumber: {}", accountNumber, ex);
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ex.getMessage());
-        }
+        log.info("Account updated successfully with accountNumber: {}", accountNumber);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{accountNumber}/status")
-    public ResponseEntity<?> updateAccountStatus(
+    public ResponseEntity<AccountResponseDTO> updateAccountStatus(
             @PathVariable String accountNumber,
             @RequestBody AccountStatusUpdateRequestDTO request) {
+
         log.info("Received status update request for accountNumber: {}", accountNumber);
 
-        try {
-            AccountResponseDTO response = accountService.updateAccountStatus(accountNumber, request);
+        AccountResponseDTO response = accountService.updateAccountStatus(accountNumber, request);
 
-            log.info("Account status updated successfully for accountNumber: {}", accountNumber);
-            return ResponseEntity.ok(response);
-        } catch (ResponseStatusException ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            log.error("Failed to update status for accountNumber: {}", accountNumber, ex);
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ex.getMessage());
-        }
+        log.info("Account status updated successfully for accountNumber: {}", accountNumber);
+        return ResponseEntity.ok(response);
     }
 }

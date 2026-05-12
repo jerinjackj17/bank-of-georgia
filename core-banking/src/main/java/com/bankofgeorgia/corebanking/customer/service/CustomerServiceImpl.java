@@ -1,5 +1,8 @@
 package com.bankofgeorgia.corebanking.customer.service;
 
+import com.bankofgeorgia.corebanking.common.exception.BadRequestException;
+import com.bankofgeorgia.corebanking.common.exception.ConflictException;
+import com.bankofgeorgia.corebanking.common.exception.ResourceNotFoundException;
 import com.bankofgeorgia.corebanking.customer.dto.CustomerRequestDTO;
 import com.bankofgeorgia.corebanking.customer.dto.CustomerResponseDTO;
 import com.bankofgeorgia.corebanking.customer.dto.CustomerStatusUpdateRequestDTO;
@@ -35,12 +38,12 @@ public class CustomerServiceImpl implements CustomerService {
 
         // check duplicate email
         if (customerRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new ConflictException("Email already exists");
         }
 
         // check duplicate username
         if (customerRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new ConflictException("Username already exists");
         }
 
         // map request to entity
@@ -85,7 +88,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         // fetch existing customer
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 
         log.info("Updating customer with id: {}", id);
 
@@ -130,7 +133,7 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerResponseDTO getCustomerById(String id) {
 
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 
         log.info("Fetched customer with id: {}", id);
 
@@ -171,13 +174,13 @@ public class CustomerServiceImpl implements CustomerService {
 
         // fetch customer
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 
         String status = request.getStatus();
 
         // validate allowed status
         if (!"ACTIVE".equalsIgnoreCase(status) && !"BLOCKED".equalsIgnoreCase(status)) {
-            throw new RuntimeException("Invalid customer status");
+            throw new BadRequestException("Invalid customer status");
         }
 
         log.info("Updating customer status for id: {} to {}", id, status);

@@ -1,5 +1,6 @@
 package com.bankofgeorgia.corebanking.customer.controller;
 
+import com.bankofgeorgia.corebanking.common.exception.GlobalExceptionHandler;
 import com.bankofgeorgia.corebanking.customer.dto.CustomerRequestDTO;
 import com.bankofgeorgia.corebanking.customer.dto.CustomerResponseDTO;
 import com.bankofgeorgia.corebanking.customer.dto.CustomerStatusUpdateRequestDTO;
@@ -18,14 +19,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
@@ -46,8 +42,10 @@ class CustomerControllerTest {
         // Creates the controller with the mocked service.
         CustomerController customerController = new CustomerController(customerService);
 
-        // Builds MockMvc without starting the full Spring Boot application.
-        mockMvc = standaloneSetup(customerController).build();
+        // Registers global exception handling for standalone MockMvc tests.
+        mockMvc = standaloneSetup(customerController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
 
         // Converts Java objects into JSON request bodies.
         objectMapper = new ObjectMapper();
@@ -92,7 +90,7 @@ class CustomerControllerTest {
     }
 
     @Test
-    void registerCustomer_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void registerCustomer_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Builds a valid request, but the service will fail.
         CustomerRequestDTO request = buildRegistrationRequest();
 
@@ -100,12 +98,12 @@ class CustomerControllerTest {
         when(customerService.registerCustomer(any(CustomerRequestDTO.class)))
                 .thenThrow(new RuntimeException("Email already exists"));
 
-        // Sends POST request and expects the controller to return HTTP 500.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(post("/api/customers/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Email already exists"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that registration service method was called.
         verify(customerService).registerCustomer(any(CustomerRequestDTO.class));
@@ -192,14 +190,15 @@ class CustomerControllerTest {
     }
 
     @Test
-    void getCustomerById_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void getCustomerById_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Forces the mocked service to fail for an invalid or missing customer.
         when(customerService.getCustomerById("999"))
                 .thenThrow(new RuntimeException("Customer not found"));
 
-        // Sends GET request and expects server error because controller has no specific not-found handler.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(get("/api/customers/999"))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that the service was called with the requested ID.
         verify(customerService).getCustomerById("999");
@@ -246,7 +245,7 @@ class CustomerControllerTest {
     }
 
     @Test
-    void updateCustomer_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void updateCustomer_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Builds an update request for a customer that will fail in service.
         UpdateCustomerRequestDTO request = new UpdateCustomerRequestDTO();
         request.setFirstName("Updated");
@@ -258,11 +257,12 @@ class CustomerControllerTest {
         when(customerService.updateCustomer(eq("999"), any(UpdateCustomerRequestDTO.class)))
                 .thenThrow(new RuntimeException("Customer not found"));
 
-        // Sends PUT request and expects server error because update exception is not specially handled.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(put("/api/customers/999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that the update service method was called.
         verify(customerService).updateCustomer(eq("999"), any(UpdateCustomerRequestDTO.class));
@@ -303,7 +303,7 @@ class CustomerControllerTest {
     }
 
     @Test
-    void updateCustomerStatus_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void updateCustomerStatus_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Builds a request with a status value.
         CustomerStatusUpdateRequestDTO request = new CustomerStatusUpdateRequestDTO();
         request.setStatus("BLOCKED");
@@ -312,11 +312,12 @@ class CustomerControllerTest {
         when(customerService.updateCustomerStatus(eq("999"), any(CustomerStatusUpdateRequestDTO.class)))
                 .thenThrow(new RuntimeException("Customer not found"));
 
-        // Sends PUT request and expects server error.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(put("/api/customers/999/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that status update service method was called.
         verify(customerService).updateCustomerStatus(eq("999"), any(CustomerStatusUpdateRequestDTO.class));

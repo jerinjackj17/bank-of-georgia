@@ -1,5 +1,8 @@
 package com.bankofgeorgia.corebanking.employee.service;
 
+import com.bankofgeorgia.corebanking.common.exception.BadRequestException;
+import com.bankofgeorgia.corebanking.common.exception.ConflictException;
+import com.bankofgeorgia.corebanking.common.exception.ResourceNotFoundException;
 import com.bankofgeorgia.corebanking.employee.dto.CreateEmployeeRequestDTO;
 import com.bankofgeorgia.corebanking.employee.dto.EmployeeResponseDTO;
 import com.bankofgeorgia.corebanking.employee.dto.EmployeeStatusUpdateRequestDTO;
@@ -8,10 +11,8 @@ import com.bankofgeorgia.corebanking.employee.dto.UpdateEmployeeRoleRequestDTO;
 import com.bankofgeorgia.corebanking.employee.entity.Employee;
 import com.bankofgeorgia.corebanking.employee.repository.EmployeeRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -36,17 +37,17 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         // check duplicate email
         if (employeeRepository.existsByEmail(request.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+            throw new ConflictException("Email already exists");
         }
 
         // check duplicate username
         if (employeeRepository.existsByUsername(request.getUsername())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
+            throw new ConflictException("Username already exists");
         }
 
         // check duplicate employee ID
         if (employeeRepository.existsByEmployeeId(request.getEmployeeId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Employee ID already exists");
+            throw new ConflictException("Employee ID already exists");
         }
 
         // map request to entity
@@ -87,7 +88,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeResponseDTO getEmployeeById(String id) {
 
         Employee employee = employeeRepository.findByEmployeeId(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
         log.info("Fetched employee with id: {}", id);
 
@@ -98,7 +99,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeResponseDTO updateEmployee(String id, UpdateEmployeeRequestDTO request) {
 
         Employee employee = employeeRepository.findByEmployeeId(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
         log.info("Updating employee with id: {}", id);
 
@@ -134,13 +135,13 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeResponseDTO updateEmployeeStatus(String id, EmployeeStatusUpdateRequestDTO request) {
 
         Employee employee = employeeRepository.findByEmployeeId(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
         String status = request.getStatus();
 
         // validate allowed status
         if (!"ACTIVE".equalsIgnoreCase(status) && !"INACTIVE".equalsIgnoreCase(status)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid employee status. Must be ACTIVE or INACTIVE");
+            throw new BadRequestException("Invalid employee status. Must be ACTIVE or INACTIVE");
         }
 
         log.info("Updating employee status for id: {} to {}", id, status);
@@ -156,10 +157,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeResponseDTO updateEmployeeRole(String id, UpdateEmployeeRoleRequestDTO request) {
 
         Employee employee = employeeRepository.findByEmployeeId(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
         if (request.getRole() == null || request.getRole().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role cannot be empty");
+            throw new BadRequestException("Role cannot be empty");
         }
 
         log.info("Updating employee role for id: {} to {}", id, request.getRole());

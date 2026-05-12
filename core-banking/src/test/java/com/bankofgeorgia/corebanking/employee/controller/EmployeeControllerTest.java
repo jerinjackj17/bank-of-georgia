@@ -1,5 +1,6 @@
 package com.bankofgeorgia.corebanking.employee.controller;
 
+import com.bankofgeorgia.corebanking.common.exception.GlobalExceptionHandler;
 import com.bankofgeorgia.corebanking.employee.dto.CreateEmployeeRequestDTO;
 import com.bankofgeorgia.corebanking.employee.dto.EmployeeResponseDTO;
 import com.bankofgeorgia.corebanking.employee.dto.EmployeeStatusUpdateRequestDTO;
@@ -22,7 +23,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
@@ -43,8 +43,10 @@ class EmployeeControllerTest {
         // Creates the controller with the mocked service.
         EmployeeController employeeController = new EmployeeController(employeeService);
 
-        // Builds MockMvc without starting the full Spring Boot application.
-        mockMvc = standaloneSetup(employeeController).build();
+        // Registers global exception handling for standalone MockMvc tests.
+        mockMvc = standaloneSetup(employeeController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
 
         // Converts Java objects into JSON request bodies.
         objectMapper = new ObjectMapper();
@@ -93,7 +95,7 @@ class EmployeeControllerTest {
     }
 
     @Test
-    void createEmployee_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void createEmployee_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Builds a valid request, but the service will fail.
         CreateEmployeeRequestDTO request = buildCreateEmployeeRequest();
 
@@ -101,12 +103,12 @@ class EmployeeControllerTest {
         when(employeeService.createEmployee(any(CreateEmployeeRequestDTO.class)))
                 .thenThrow(new RuntimeException("Email already exists"));
 
-        // Sends POST request and expects the controller to return HTTP 500.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(post("/api/employees")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Email already exists"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that the service method was called.
         verify(employeeService).createEmployee(any(CreateEmployeeRequestDTO.class));
@@ -196,15 +198,15 @@ class EmployeeControllerTest {
     }
 
     @Test
-    void getEmployeeById_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void getEmployeeById_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Forces the mocked service to fail for an invalid or missing employee.
         when(employeeService.getEmployeeById("999"))
                 .thenThrow(new RuntimeException("Employee not found"));
 
-        // Sends GET request and expects server error.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(get("/api/employees/999"))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Employee not found"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that the service was called with the requested ID.
         verify(employeeService).getEmployeeById("999");
@@ -252,7 +254,7 @@ class EmployeeControllerTest {
     }
 
     @Test
-    void updateEmployee_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void updateEmployee_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Builds an update request for an employee that will fail in service.
         UpdateEmployeeRequestDTO request = new UpdateEmployeeRequestDTO();
         request.setFirstName("Updated");
@@ -262,12 +264,12 @@ class EmployeeControllerTest {
         when(employeeService.updateEmployee(eq("999"), any(UpdateEmployeeRequestDTO.class)))
                 .thenThrow(new RuntimeException("Employee not found"));
 
-        // Sends PUT request and expects server error.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(put("/api/employees/999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Employee not found"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that the update service method was called.
         verify(employeeService).updateEmployee(eq("999"), any(UpdateEmployeeRequestDTO.class));
@@ -310,7 +312,7 @@ class EmployeeControllerTest {
     }
 
     @Test
-    void updateEmployeeStatus_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void updateEmployeeStatus_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Builds a request with a status value.
         EmployeeStatusUpdateRequestDTO request = new EmployeeStatusUpdateRequestDTO();
         request.setStatus("INACTIVE");
@@ -319,12 +321,12 @@ class EmployeeControllerTest {
         when(employeeService.updateEmployeeStatus(eq("999"), any(EmployeeStatusUpdateRequestDTO.class)))
                 .thenThrow(new RuntimeException("Employee not found"));
 
-        // Sends PUT request and expects server error.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(put("/api/employees/999/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Employee not found"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that status update service method was called.
         verify(employeeService).updateEmployeeStatus(eq("999"), any(EmployeeStatusUpdateRequestDTO.class));
@@ -367,7 +369,7 @@ class EmployeeControllerTest {
     }
 
     @Test
-    void updateEmployeeRole_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void updateEmployeeRole_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Builds a request with a role value.
         UpdateEmployeeRoleRequestDTO request = new UpdateEmployeeRoleRequestDTO();
         request.setRole("MANAGER");
@@ -376,12 +378,12 @@ class EmployeeControllerTest {
         when(employeeService.updateEmployeeRole(eq("999"), any(UpdateEmployeeRoleRequestDTO.class)))
                 .thenThrow(new RuntimeException("Employee not found"));
 
-        // Sends PUT request and expects server error.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(put("/api/employees/999/role")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Employee not found"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that role update service method was called.
         verify(employeeService).updateEmployeeRole(eq("999"), any(UpdateEmployeeRoleRequestDTO.class));

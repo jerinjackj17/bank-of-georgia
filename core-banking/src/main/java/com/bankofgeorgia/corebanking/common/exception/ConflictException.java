@@ -1,0 +1,8 @@
+package com.bankofgeorgia.corebanking.common.exception;
+
+public class ConflictException extends RuntimeException {
+
+    public ConflictException(String message) {
+        super(message);
+    }
+}

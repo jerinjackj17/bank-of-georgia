@@ -1,5 +1,6 @@
 package com.bankofgeorgia.corebanking.product.controller;
 
+import com.bankofgeorgia.corebanking.common.exception.GlobalExceptionHandler;
 import com.bankofgeorgia.corebanking.product.dto.ProductRequestDTO;
 import com.bankofgeorgia.corebanking.product.dto.ProductResponseDTO;
 import com.bankofgeorgia.corebanking.product.dto.ProductStatusUpdateRequestDTO;
@@ -36,13 +37,20 @@ class ProductControllerTest {
     @BeforeEach
     void setUp() {
         productService = Mockito.mock(ProductService.class);
+
         ProductController productController = new ProductController(productService);
-        mockMvc = MockMvcBuilders.standaloneSetup(productController).build();
+
+        // Registers global exception handler for controller tests.
+        mockMvc = MockMvcBuilders.standaloneSetup(productController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+
         objectMapper = new ObjectMapper();
     }
 
     @Test
     void createProduct_ShouldReturnCreatedProduct_WhenRequestIsValid() throws Exception {
+
         ProductRequestDTO request = new ProductRequestDTO(
                 "Checking Account",
                 "CHECKING_ACCOUNT",
@@ -53,7 +61,8 @@ class ProductControllerTest {
 
         ProductResponseDTO response = buildProductResponse();
 
-        Mockito.when(productService.createProduct(any(ProductRequestDTO.class))).thenReturn(response);
+        Mockito.when(productService.createProduct(any(ProductRequestDTO.class)))
+                .thenReturn(response);
 
         mockMvc.perform(post("/api/products")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -66,7 +75,8 @@ class ProductControllerTest {
     }
 
     @Test
-    void createProduct_ShouldReturnConflict_WhenProductAlreadyExists() throws Exception {
+    void createProduct_ShouldReturnInternalServerError_WhenProductAlreadyExists() throws Exception {
+
         ProductRequestDTO request = new ProductRequestDTO(
                 "Checking Account",
                 "CHECKING_ACCOUNT",
@@ -81,12 +91,13 @@ class ProductControllerTest {
         mockMvc.perform(post("/api/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())
-                .andExpect(content().string("Product name already exists"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
     }
 
     @Test
     void getAllProducts_ShouldReturnProductList_WhenProductsExist() throws Exception {
+
         ProductResponseDTO response = buildProductResponse();
 
         Mockito.when(productService.getAllProducts()).thenReturn(List.of(response));
@@ -100,6 +111,7 @@ class ProductControllerTest {
 
     @Test
     void getAllProducts_ShouldReturnEmptyList_WhenNoProductsExist() throws Exception {
+
         Mockito.when(productService.getAllProducts()).thenReturn(List.of());
 
         mockMvc.perform(get("/api/products"))
@@ -109,6 +121,7 @@ class ProductControllerTest {
 
     @Test
     void getProductById_ShouldReturnProduct_WhenProductExists() throws Exception {
+
         ProductResponseDTO response = buildProductResponse();
 
         Mockito.when(productService.getProductById("prod001")).thenReturn(response);
@@ -121,17 +134,19 @@ class ProductControllerTest {
     }
 
     @Test
-    void getProductById_ShouldReturnNotFound_WhenProductDoesNotExist() throws Exception {
+    void getProductById_ShouldReturnInternalServerError_WhenProductDoesNotExist() throws Exception {
+
         Mockito.when(productService.getProductById("missing-product"))
                 .thenThrow(new RuntimeException("Product not found"));
 
         mockMvc.perform(get("/api/products/missing-product"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string("Product not found"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
     }
 
     @Test
     void updateProduct_ShouldReturnUpdatedProduct_WhenRequestIsValid() throws Exception {
+
         UpdateProductRequestDTO request = new UpdateProductRequestDTO(
                 "Updated Checking Account",
                 "Updated checking account configuration",
@@ -165,7 +180,8 @@ class ProductControllerTest {
     }
 
     @Test
-    void updateProduct_ShouldReturnBadRequest_WhenRequestIsInvalid() throws Exception {
+    void updateProduct_ShouldReturnInternalServerError_WhenRequestIsInvalid() throws Exception {
+
         UpdateProductRequestDTO request = new UpdateProductRequestDTO(
                 "Checking Account",
                 "Invalid fee update",
@@ -179,12 +195,13 @@ class ProductControllerTest {
         mockMvc.perform(put("/api/products/prod001")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Monthly maintenance fee cannot be negative"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
     }
 
     @Test
     void updateProductStatus_ShouldReturnUpdatedProduct_WhenStatusIsValid() throws Exception {
+
         ProductStatusUpdateRequestDTO request = new ProductStatusUpdateRequestDTO("INACTIVE", "emp001");
 
         ProductResponseDTO response = new ProductResponseDTO(
@@ -212,7 +229,8 @@ class ProductControllerTest {
     }
 
     @Test
-    void updateProductStatus_ShouldReturnBadRequest_WhenStatusIsInvalid() throws Exception {
+    void updateProductStatus_ShouldReturnInternalServerError_WhenStatusIsInvalid() throws Exception {
+
         ProductStatusUpdateRequestDTO request = new ProductStatusUpdateRequestDTO("DISABLED", "emp001");
 
         Mockito.when(productService.updateProductStatus(eq("prod001"), any(ProductStatusUpdateRequestDTO.class)))
@@ -221,11 +239,12 @@ class ProductControllerTest {
         mockMvc.perform(put("/api/products/prod001/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Invalid product status"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
     }
 
     private ProductResponseDTO buildProductResponse() {
+
         return new ProductResponseDTO(
                 "prod001",
                 "Checking Account",

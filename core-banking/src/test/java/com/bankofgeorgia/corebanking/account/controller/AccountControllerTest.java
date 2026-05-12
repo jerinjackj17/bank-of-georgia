@@ -5,6 +5,7 @@ import com.bankofgeorgia.corebanking.account.dto.AccountStatusUpdateRequestDTO;
 import com.bankofgeorgia.corebanking.account.dto.OpenAccountRequestDTO;
 import com.bankofgeorgia.corebanking.account.dto.UpdateAccountRequestDTO;
 import com.bankofgeorgia.corebanking.account.service.AccountService;
+import com.bankofgeorgia.corebanking.common.exception.GlobalExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
@@ -43,8 +43,10 @@ class AccountControllerTest {
         // Creates the controller with the mocked service.
         AccountController accountController = new AccountController(accountService);
 
-        // Builds MockMvc without starting the full Spring Boot application.
-        mockMvc = standaloneSetup(accountController).build();
+        // Registers global exception handling for standalone MockMvc tests.
+        mockMvc = standaloneSetup(accountController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
 
         // Converts Java objects into JSON request bodies.
         objectMapper = new ObjectMapper();
@@ -86,7 +88,7 @@ class AccountControllerTest {
     }
 
     @Test
-    void openAccount_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void openAccount_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Builds a valid request, but the service will fail.
         OpenAccountRequestDTO request = new OpenAccountRequestDTO("cust-missing", "prod001", "EMP001");
 
@@ -94,12 +96,12 @@ class AccountControllerTest {
         when(accountService.openAccount(any(OpenAccountRequestDTO.class)))
                 .thenThrow(new RuntimeException("Customer not found"));
 
-        // Sends POST request and expects the controller to return HTTP 500.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Customer not found"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that the service method was called.
         verify(accountService).openAccount(any(OpenAccountRequestDTO.class));
@@ -176,15 +178,15 @@ class AccountControllerTest {
     }
 
     @Test
-    void getAccountByAccountNumber_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void getAccountByAccountNumber_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Forces the mocked service to fail for a missing account.
         when(accountService.getAccountByAccountNumber("ACC999999"))
                 .thenThrow(new RuntimeException("Account not found"));
 
-        // Sends GET request and expects server error.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(get("/api/accounts/ACC999999"))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Account not found"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that the service was called with the requested account number.
         verify(accountService).getAccountByAccountNumber("ACC999999");
@@ -218,15 +220,15 @@ class AccountControllerTest {
     }
 
     @Test
-    void getAccountsByCustomerId_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void getAccountsByCustomerId_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Forces the mocked service to fail for a missing customer.
         when(accountService.getAccountsByCustomerId("cust-missing"))
                 .thenThrow(new RuntimeException("Customer not found"));
 
-        // Sends GET request and expects server error.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(get("/api/accounts/customer/cust-missing"))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Customer not found"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that the service was called with the requested customer ID.
         verify(accountService).getAccountsByCustomerId("cust-missing");
@@ -266,7 +268,7 @@ class AccountControllerTest {
     }
 
     @Test
-    void updateAccount_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void updateAccount_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Builds an update request for an account that will fail in service.
         UpdateAccountRequestDTO request = new UpdateAccountRequestDTO("prod-missing", "EMP001");
 
@@ -274,12 +276,12 @@ class AccountControllerTest {
         when(accountService.updateAccount(eq("ACC999999"), any(UpdateAccountRequestDTO.class)))
                 .thenThrow(new RuntimeException("Account not found"));
 
-        // Sends PUT request and expects server error.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(put("/api/accounts/ACC999999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Account not found"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that the update service method was called.
         verify(accountService).updateAccount(eq("ACC999999"), any(UpdateAccountRequestDTO.class));
@@ -318,7 +320,7 @@ class AccountControllerTest {
     }
 
     @Test
-    void updateAccountStatus_ShouldReturnServerError_WhenServiceFails() throws Exception {
+    void updateAccountStatus_ShouldReturnInternalServerError_WhenServiceFails() throws Exception {
         // Builds a request with a status value.
         AccountStatusUpdateRequestDTO request = new AccountStatusUpdateRequestDTO("CLOSED", "EMP001");
 
@@ -326,12 +328,12 @@ class AccountControllerTest {
         when(accountService.updateAccountStatus(eq("ACC999999"), any(AccountStatusUpdateRequestDTO.class)))
                 .thenThrow(new RuntimeException("Account not found"));
 
-        // Sends PUT request and expects server error.
+        // Global exception handler returns structured error JSON.
         mockMvc.perform(put("/api/accounts/ACC999999/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Account not found"));
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
 
         // Verifies that status update service method was called.
         verify(accountService).updateAccountStatus(eq("ACC999999"), any(AccountStatusUpdateRequestDTO.class));
