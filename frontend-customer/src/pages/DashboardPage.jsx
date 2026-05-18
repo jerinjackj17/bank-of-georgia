@@ -180,9 +180,15 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <Button variant="outline" onClick={() => setShowLogout(true)}>
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={() => navigate("/accounts")}>
+              Accounts
+            </Button>
+
+            <Button variant="outline" onClick={() => setShowLogout(true)}>
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
