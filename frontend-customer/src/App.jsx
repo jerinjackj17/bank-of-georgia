@@ -5,6 +5,8 @@ import RegisterPage from "./pages/RegisterPage";
 import OtpPage from "./pages/OtpPage";
 import DashboardPage from "./pages/DashboardPage";
 import CustomersPage from "./pages/CustomersPage";
+import AccountsPage from "./pages/AccountsPage";
+import AccountDetailPage from "./pages/AccountDetailPage";
 
 // Protects pages that should only open after login.
 function ProtectedRoute({ children }) {
@@ -52,6 +54,24 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <CustomersPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/accounts"
+        element={
+          <ProtectedRoute>
+            <AccountsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/accounts/:accountNumber"
+        element={
+          <ProtectedRoute>
+            <AccountDetailPage />
           </ProtectedRoute>
         }
       />

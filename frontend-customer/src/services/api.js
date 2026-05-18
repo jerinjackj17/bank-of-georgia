@@ -106,5 +106,24 @@ export const updateCustomerStatus = (id, status) =>
     status,
   });
 
+// Gets all products.
+export const getAllProducts = () => api.get("/products");
+
+// Gets all accounts for a customer.
+export const getAccountsByCustomerId = (customerId) =>
+  api.get(`/accounts/customer/${customerId}`);
+
+// Gets one account by account number.
+export const getAccountByAccountNumber = (accountNumber) =>
+  api.get(`/accounts/${accountNumber}`);
+
+// Opens a new account for a customer.
+export const openAccount = (customerId, productId) =>
+  api.post("/accounts", {
+    customerId,
+    productId,
+    openedByEmployeeId: "CUSTOMER",
+  });
+
 // Exports the configured Axios client for other service files.
 export default api;
