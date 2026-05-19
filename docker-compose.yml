@@ -52,6 +52,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET}
 
   event-service:
     build:

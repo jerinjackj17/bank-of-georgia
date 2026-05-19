@@ -201,22 +201,31 @@ export default function LoginPage() {
     setFieldErrors({});
 
     try {
-      const data = await loginWithPassword(
+      const loginResponse = await loginWithPassword(
         loginType,
         loginId.trim(),
         password
       );
 
-      const customer = await findCustomerAfterLogin(data);
+      // Store the token immediately so the getAllCustomers() call inside
+      // findCustomerAfterLogin can authenticate with the backend.
+      if (loginResponse?.token) {
+        localStorage.setItem("authToken", loginResponse.token);
+      }
+
+      const customer = await findCustomerAfterLogin(loginResponse);
 
       if (!customer) {
+        localStorage.removeItem("authToken");
         setError("Login succeeded, but customer profile could not be loaded.");
         return;
       }
 
-      loginUser(customer);
+      // Pass both the token and the customer profile to loginUser.
+      loginUser({ ...loginResponse, customer });
       navigate("/dashboard", { replace: true });
     } catch (err) {
+      localStorage.removeItem("authToken");
       setError(getFriendlyLoginError(err.message));
     } finally {
       setLoading(false);
