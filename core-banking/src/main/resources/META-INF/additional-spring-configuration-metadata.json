@@ -13,5 +13,20 @@
     "name": "bcrypt.strength",
     "type": "java.lang.String",
     "description": "A description for 'bcrypt.strength'"
+  },
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "Base64-encoded secret key used to sign and verify JWTs. Must decode to at least 32 bytes."
+  },
+  {
+    "name": "jwt.customer-expiration-ms",
+    "type": "java.lang.Long",
+    "description": "JWT validity duration for customers in milliseconds. Default is 900000 (15 minutes)."
+  },
+  {
+    "name": "jwt.employee-expiration-ms",
+    "type": "java.lang.Long",
+    "description": "JWT validity duration for employees in milliseconds. Default is 7200000 (2 hours)."
   }
 ]}

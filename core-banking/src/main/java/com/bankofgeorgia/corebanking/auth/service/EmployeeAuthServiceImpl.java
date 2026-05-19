@@ -3,6 +3,7 @@ package com.bankofgeorgia.corebanking.auth.service;
 import com.bankofgeorgia.corebanking.auth.dto.EmployeeLoginRequestDTO;
 import com.bankofgeorgia.corebanking.auth.dto.LoginResponseDTO;
 import com.bankofgeorgia.corebanking.common.exception.UnauthorizedException;
+import com.bankofgeorgia.corebanking.config.JwtUtil;
 import com.bankofgeorgia.corebanking.employee.entity.Employee;
 import com.bankofgeorgia.corebanking.employee.repository.EmployeeRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,11 +18,14 @@ public class EmployeeAuthServiceImpl implements EmployeeAuthService {
 
     private final EmployeeRepository employeeRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     public EmployeeAuthServiceImpl(EmployeeRepository employeeRepository,
-                                   BCryptPasswordEncoder passwordEncoder) {
+                                   BCryptPasswordEncoder passwordEncoder,
+                                   JwtUtil jwtUtil) {
         this.employeeRepository = employeeRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
@@ -37,7 +41,9 @@ public class EmployeeAuthServiceImpl implements EmployeeAuthService {
             throw new UnauthorizedException("Invalid login credentials");
         }
 
-        // Return a plain success response, no JWT token is issued yet.
-        return new LoginResponseDTO("Login successful", request.getUsername(), "true");
+        // Issue a JWT scoped to this employee.
+        String token = jwtUtil.generateEmployeeToken(employee.getId());
+
+        return new LoginResponseDTO("Login successful", request.getUsername(), "true", token);
     }
 }

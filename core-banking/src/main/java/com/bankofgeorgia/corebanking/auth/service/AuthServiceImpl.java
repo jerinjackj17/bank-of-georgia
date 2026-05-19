@@ -6,10 +6,10 @@ import com.bankofgeorgia.corebanking.auth.dto.LoginRequestDTO;
 import com.bankofgeorgia.corebanking.auth.dto.LoginResponseDTO;
 import com.bankofgeorgia.corebanking.common.exception.BadRequestException;
 import com.bankofgeorgia.corebanking.common.exception.UnauthorizedException;
+import com.bankofgeorgia.corebanking.config.JwtUtil;
 import com.bankofgeorgia.corebanking.customer.entity.Customer;
 import com.bankofgeorgia.corebanking.customer.repository.CustomerRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,10 +18,14 @@ public class AuthServiceImpl implements AuthService {
 
     private final CustomerRepository customerRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
-    public AuthServiceImpl(CustomerRepository customerRepository, BCryptPasswordEncoder passwordEncoder) {
+    public AuthServiceImpl(CustomerRepository customerRepository,
+                           BCryptPasswordEncoder passwordEncoder,
+                           JwtUtil jwtUtil) {
         this.customerRepository = customerRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
@@ -46,7 +50,9 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException("Invalid login credentials");
         }
 
-        // Return a plain success response, no JWT token is issued yet.
-        return new LoginResponseDTO("Login successful", loginRequest.getLoginId(), "true");
+        // Issue a JWT scoped to this customer.
+        String token = jwtUtil.generateCustomerToken(customer.getId());
+
+        return new LoginResponseDTO("Login successful", loginRequest.getLoginId(), "true", token);
     }
 }

@@ -227,7 +227,7 @@ Account numbers are auto-generated (e.g. `ACC000001`) and are used as path varia
 ```
 
 - The customer must exist and the product must be `ACTIVE`.
-- Balance is initialized to `0.00` and is managed by future transaction endpoints.
+- Balance starts at `0.00` and is updated by deposit and withdrawal transactions.
 
 **Update account request** (`PUT /api/accounts/{accountNumber}`) — all fields optional:
 ```json
@@ -242,6 +242,52 @@ Account numbers are auto-generated (e.g. `ACC000001`) and are used as path varia
 {
   "status": "FROZEN",
   "updatedByEmployeeId": "EMP001"
+}
+```
+
+---
+
+### Transactions — `/api/transactions`
+
+Transaction IDs are auto-generated (e.g. `TXN000001`).
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/transactions/deposit` | Deposit funds into an account |
+| POST | `/api/transactions/withdraw` | Withdraw funds from an account |
+| GET | `/api/transactions` | List all transactions |
+| GET | `/api/transactions/account/{accountNumber}` | List all transactions for an account |
+
+**Deposit request:**
+```json
+{
+  "accountNumber": "ACC000001",
+  "amount": "500.00",
+  "description": "Initial deposit"
+}
+```
+
+**Withdraw request:**
+```json
+{
+  "accountNumber": "ACC000001",
+  "amount": "100.00",
+  "description": "ATM withdrawal"
+}
+```
+
+**Transaction response:**
+```json
+{
+  "transactionId": "TXN000001",
+  "accountNumber": "ACC000001",
+  "customerId": "64a1f2b3c4d5e6f7a8b9c0d1",
+  "type": "DEPOSIT",
+  "amount": "500.00",
+  "description": "Initial deposit",
+  "balanceAfter": "500.00",
+  "status": "SUCCESS",
+  "createdAt": "2025-01-01T12:00:00"
 }
 ```
 
